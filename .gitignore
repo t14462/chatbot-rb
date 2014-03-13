@@ -17,5 +17,11 @@ tmp
 _yardoc
 doc/
 
-test_config.yaml
-config.yaml
+# Configs
+config.yml
+
+# IDE things
+.idea/
+
+# Testing things
+chat.log
