@@ -3,6 +3,10 @@ require 'media_wiki'
 require 'logger'
 require_relative './commands'
 require_relative './util'
+
+$logger = Logger.new(STDOUT)
+$logger.level = Logger::DEBUG
+
 class Chatbot
   include HTTParty
   include Commands
@@ -17,7 +21,7 @@ class Chatbot
 
   def initialize
     unless File.exists? CONFIG_FILE
-      puts CONFIG_FILE + ' not found!'
+      $logger.fatal "Config: #{CONFIG_FILE} not found!"
       exit
     end
 
@@ -46,13 +50,22 @@ class Chatbot
   end
 
   def get(path: '/socket.io/1/')
+    $logger.debug '-> get()'
+    $logger.debug "get(): path=#{path}"
     path += "xhr-polling/#{@session}" unless @session.nil?
-    self.class.get(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i}, :headers => @headers)
+    res = self.class.get(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i}, :headers => @headers)
+    $logger.debug '<- get()'
+    return res
   end
 
   def post(body, path: '/socket.io/1/')
+    $logger.debug '-> post()'
+    $logger.debug "post(): body='#{body}'"
     path += "xhr-polling/#{@session}" unless @session.nil?
-    self.class.post(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i}, :body => body, :headers => @headers)
+    $logger.debug "post(): path=#{path}"
+    res = self.class.post(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i}, :body => body, :headers => @headers)
+    $logger.debug '<- post()'
+    return res
   end
 
   def run!
@@ -82,6 +95,7 @@ class Chatbot
         else
           event = body.match(/\d:::?/)[0]
           data = body.sub(event, '')
+          $logger.debug 'run!(): event=' + event
           @threads << Thread.new(event, data) {
             case event
               when '1::'
@@ -99,6 +113,7 @@ class Chatbot
       # TODO Handle *all* the errors!
       end
     end
+    @threads.each {|thr| thr.join}
   end
 
   # BEGIN socket event methods
@@ -107,17 +122,22 @@ class Chatbot
   end
 
   def on_socket_message(msg)
-    puts '-----'
-    puts __callee__
+    $logger.debug '-> on_socket_message()'
+    $logger.debug 'on_socket_message(): msg=' + msg
     json = JSON.parse(msg)
+    json['data'] = JSON.parse(json['data'])
+    $logger.debug 'on_socket_message(): json=' + json.to_s
     if json['event'] == 'chat:add' and not json['data']['id'].nil?
       json['event'] = 'message'
     end
     self.method("on_chat_#{json['event']}".to_sym).call(json['data']) # TODO make this less hacky
+    $logger.debug '<- on_socket_message()'
   end
 
   def on_socket_ping
+    $logger.debug '-> on_socket_ping()'
     post('2::')
+    $logger.debug '<- on_socket_ping()'
   end
   # END socket event methods
 
@@ -135,7 +155,9 @@ class Chatbot
   end
 
   def on_chat_join(data)
-    if data['attrs']['name'] == @config['name'] and @clientid.nil?
+    $logger.debug '-> ' + __method__
+    $logger.debug 'on_chat_join(): data=' + data
+    if data['attrs']['name'] == @config['user'] and @clientid.nil?
       @clientid = data['cid']
       post('3:::{"id":null,"cid":"' + @clientid + '","attrs":{"msgType":"command","command":"initquery"}}')
     end
