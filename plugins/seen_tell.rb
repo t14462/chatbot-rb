@@ -1,10 +1,10 @@
 class SeenTell
   include Chatbot::Plugin
 
-  #match /^seenon/, :method => :enable_seen
-  #match /^seenoff/, :method => :disable_seen
+  match /^seenon/, :method => :enable_seen
+  match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
-  match /^seen (.*)/, :method => :seen
+  match /^seen (.*)/, :method => :seen_user
   match /.*/, :method => :update_user, :use_prefix => false
   listen_to :join, :update_user
 
@@ -45,15 +45,27 @@ class SeenTell
     end
   end
 
-  def seen(captures, user)
-    return @client.send_msg "#{user.name}: Sorry, !seen is currently down for maintenance right now :( bother Sactage until it's fixed!"
+  def seen_user(captures, user)
     if @seen.key? captures[1].downcase
-      @client.send_msg "#{user.name}: I last saw #{captures[1]} #{Time.now.to_i - @seen[@captures[1].downcase]} seconds ago"
+      @client.send_msg "#{user.name}: I last saw #{captures[1]} #{get_hms(Time.now.to_i - @seen[captures[1].downcase])}"
     else
       @client.send_msg "#{user.name}: I haven't seen #{captures[1]}"
     end
   end
 
+  def enable_seen(captures, user)
+    if user.is? :mod and !@allow_seen
+      @allow_seen = true
+      @client.send_msg "#{user.name}: !seen enabled"
+    end
+  end
+
+  def disable_seen(captures, user)
+    if user.is? :mod and @allow_seen
+      @allow_seen = false
+      @client.send_msg "#{user.name}: !seen disabled"
+    end
+  end
   def update_user(data, *args)
     if args.size > 0 # Message
       user = args[0]
@@ -63,7 +75,7 @@ class SeenTell
     @seen[user.name.downcase] = Time.now.to_i
     File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     if @tells.key? user.name.downcase
-      tell_mutex.synchronize do
+      @tell_mutex.synchronize do
         @tells[user.name.downcase].each do |k, v|
           @client.send_msg "#{user.name}, #{k} told you: #{v}"
         end
@@ -71,5 +83,23 @@ class SeenTell
         File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       end
     end
+  end
+
+  def get_hms(ts)
+    weeks = ts / 604800
+    ts %= 604800
+    days = ts / 86400
+    ts %= 86400
+    hours = ts / 3600
+    ts %= 3600
+    minutes = ts / 60
+    ts %= 60
+    ret = ''
+    ret += "#{weeks} week#{weeks > 1 ? 's' : ''}, " if weeks > 0
+    ret += "#{days} day#{days > 1 ? 's' : ''}, " if days > 0
+    ret += "#{hours} hour#{hours > 1 ? 's' : ''}, " if hours > 0
+    ret += "#{minutes} minute#{minutes > 1 ? 's' : ''}, " if minutes > 0
+    ret.gsub(/, $/, " and ") + "#{ts} second#{ts != 1 ? 's' : ''} ago."
+
   end
 end
