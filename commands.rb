@@ -1,8 +1,6 @@
-module Plugins
+module Chatbot
   # Much of this logic is a watered-down/modified from Cinch's plugin system
   # Thanks to them <3
-
-
   module Plugin
     attr_reader :client
 
@@ -11,7 +9,7 @@ module Plugins
     end
 
     module ClassMethods
-      attr_reader :matchers, :listeners, :prefix
+      attr_reader :matchers, :listeners
       Matcher = Struct.new(:pattern, :use_prefix, :method, :prefix)
       Listener = Struct.new(:event, :method)
 
