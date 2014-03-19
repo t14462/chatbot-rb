@@ -27,3 +27,5 @@ config.yml
 chat.log
 ignore.yml
 main.rb
+seen.yml
+tells.yml
