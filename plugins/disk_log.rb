@@ -16,7 +16,11 @@ class Chatbot::DiskLog
 
   def log_message(captures, user)
     @logfile_mutex.synchronize do
-      File.open("chat.log", 'a') {|f| f.write(Util::ts + " <#{user.log_name}> #{captures[0]}")}
+      if /^\/me/.match captures[0]
+        File.open("chat.log", 'a') {|f| f.write(Util::ts + " * #{user.log_name} #{captures[0].gsub(/\/me /, '')}")}
+      else
+        File.open("chat.log", 'a') {|f| f.write(Util::ts + " <#{user.log_name}> #{captures[0]}")}
+      end
     end
   end
 
