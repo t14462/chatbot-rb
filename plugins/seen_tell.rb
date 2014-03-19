@@ -22,7 +22,7 @@ class SeenTell
       File.open('seen.yml', 'w+') {|f| f.write({}.to_yaml)}
       @seen = {}
     end
-
+    @tell_mutex = Mutex.new
     @allow_seen = true
   end
 
@@ -30,17 +30,19 @@ class SeenTell
     target = captures[1].gsub(/_/, ' ')
     message = captures[2]
     if target.downcase.eql? user.name.downcase
-      @client.send_msg user.name + ': You can\'t !tell yourself something!'
+      return @client.send_msg user.name + ': You can\'t !tell yourself something!'
     elsif target.downcase.eql? @client.config['user'].downcase
-      @client.send_msg user.name + ': Thanks for the message <3'
+      return @client.send_msg user.name + ': Thanks for the message <3'
     end
-    if @tells.key? target.downcase
-      @tells[target.downcase][user.name] = message
-    else
-      @tells[target.downcase] = {user.name => message}
+    @tell_mutex.synchronize do
+      if @tells.key? target.downcase
+        @tells[target.downcase][user.name] = message
+      else
+        @tells[target.downcase] = {user.name => message}
+      end
+      File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
+      @client.send_msg "#{user.name}: I'll tell #{target} that the next time I see them."
     end
-    File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
-    @client.send_msg "#{user.name}: I'll tell #{target} that the next time I see them."
   end
 
   def seen(captures, user)
@@ -61,11 +63,13 @@ class SeenTell
     @seen[user.name.downcase] = Time.now.to_i
     File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     if @tells.key? user.name.downcase
-      @tells[user.name.downcase].each do |k, v|
-        @client.send_msg "#{user.name}, #{k} told you: #{v}"
+      tell_mutex.synchronize do
+        @tells[user.name.downcase].each do |k, v|
+          @client.send_msg "#{user.name}, #{k} told you: #{v}"
+        end
+        @tells[user.name.downcase] = {}
+        File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       end
-      @tells[user.name.downcase] = {}
-      File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
     end
   end
 end
