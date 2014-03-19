@@ -13,7 +13,7 @@ class Chatbot::AutoTube
   end
 
   def execute(captures, user)
-    return if user.ignored? or user.name == @client.config['name']
+    return if user.ignored? or user.name == @client.config['user']
     video_id = captures[1].nil? ? captures[2] : captures[1]
     @client.send_msg fetch_video_info(video_id)
   end
