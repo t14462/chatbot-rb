@@ -3,7 +3,7 @@ require_relative '../util'
 class Chatbot::DiskLog
   include Chatbot::Plugin
 
-  match /.*/, :method => :log_message
+  match /.*/, :method => :log_message, :use_prefix => false
   listen_to :join, :log_join
   listen_to :part, :log_part
   listen_to :kick, :log_kick
@@ -17,34 +17,34 @@ class Chatbot::DiskLog
   def log_message(captures, user)
     @logfile_mutex.synchronize do
       if /^\/me/.match captures[0]
-        File.open("chat.log", 'a') {|f| f.write(Util::ts + " * #{user.log_name} #{captures[0].gsub(/\/me /, '')}")}
+        File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " * #{user.log_name} #{captures[0].gsub(/\/me /, '')}")}
       else
-        File.open("chat.log", 'a') {|f| f.write(Util::ts + " <#{user.log_name}> #{captures[0]}")}
+        File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " <#{user.log_name}> #{captures[0]}")}
       end
     end
   end
 
   def log_join(data)
     @logfile_mutex.synchronize do
-      File.open("chat.log", 'a') {|f| f.write(Util::ts + " -!- #{data['attrs']['name']} [~chat@wikia/#{data['attrs']['name'].gsub(/ /, '-')}] has joined #Special:Chat")}
+      File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " -!- #{data['attrs']['name']} [~chat@wikia/#{data['attrs']['name'].gsub(/ /, '-')}] has joined #Special:Chat")}
     end
   end
 
   def log_part(data)
     @logfile_mutex.synchronize do
-      File.open("chat.log", 'a') {|f| f.write(Util::ts + " -!- #{data['attrs']['name']} [~chat@wikia/#{data['attrs']['name'].gsub(/ /, '-')}] has left #Special:Chat [Leaving]")}
+      File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " -!- #{data['attrs']['name']} [~chat@wikia/#{data['attrs']['name'].gsub(/ /, '-')}] has left #Special:Chat [Leaving]")}
     end
   end
 
   def log_kick(data)
     @logfile_mutex.synchronize do
-      File.open("chat.log", 'a') {|f| f.write(Util::ts + " -!- #{data['attrs']['kickedUserName']} was kicked from #Special:Chat by #{data['attrs']['moderatorName']} [KICK]")}
+      File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " -!- #{data['attrs']['kickedUserName']} was kicked from #Special:Chat by #{data['attrs']['moderatorName']} [KICK]")}
     end
   end
 
   def log_ban(data)
     @logfile_mutex.synchronize do
-      File.open("chat.log", 'a') {|f| f.write(Util::ts + " -!- #{data['attrs']['kickedUserName']} was kicked from #Special:Chat by #{data['attrs']['moderatorName']} [BAN]")}
+      File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " -!- #{data['attrs']['kickedUserName']} was kicked from #Special:Chat by #{data['attrs']['moderatorName']} [BAN]")}
     end
   end
 
