@@ -18,7 +18,7 @@ module Chatbot
     SOCKET_EVENTS = {'1::' => :on_socket_connect, '4:::' => :on_socket_message, '8::' => :on_socket_ping}
 
 
-    attr_accessor :session, :clientid, :handlers, :config
+    attr_accessor :session, :clientid, :handlers, :config, :userlist
 
     def initialize
       unless File.exists? CONFIG_FILE
