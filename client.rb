@@ -18,7 +18,7 @@ module Chatbot
     SOCKET_EVENTS = {'1::' => :on_socket_connect, '4:::' => :on_socket_message, '8::' => :on_socket_ping}
 
 
-    attr_accessor :session, :clientid, :handlers, :config, :userlist
+    attr_accessor :session, :clientid, :handlers, :config, :userlist, :api
     attr_reader :plugins
 
     def initialize
