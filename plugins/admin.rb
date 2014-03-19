@@ -13,7 +13,7 @@ class Chatbot::Admin
 
   def list_plugins(captures, user)
   	if user.is? :mod
-  	  @client.send_msg "#{user.name}, Currently loaded plugins are: " + @client.plugins.collect({|p| p.class.to_s}).join(', ')
+  	  @client.send_msg "#{user.name}, Currently loaded plugins are: " + @client.plugins.collect{|p| p.class.to_s}.join(', ')
   end
 
 end
