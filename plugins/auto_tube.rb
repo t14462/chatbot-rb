@@ -38,7 +38,7 @@ class Chatbot::AutoTube
     rating = data.key?('rating') ? data['rating'].round(2) : 0
     duration = get_hms(data['duration'])
     published = data['uploaded'].split(/T/)[0]
-    views = data['views'].reverse.scan(/\d{1,3}/).reverse.collect{|e|e.reverse}.join(',')
+    views = data.key?('views') ? data['views'].reverse.scan(/\d{1,3}/).reverse.collect{|e|e.reverse}.join(',') : 0
     "[YOUTUBE] Title: #{data['title']} - Duration: #{duration} - Uploaded: #{published} - Rating: #{rating} - Views: #{views} - http://youtu.be/#{id}"
   end
 
