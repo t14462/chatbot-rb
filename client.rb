@@ -19,6 +19,7 @@ module Chatbot
 
 
     attr_accessor :session, :clientid, :handlers, :config, :userlist
+    attr_reader :plugins
 
     def initialize
       unless File.exists? CONFIG_FILE
