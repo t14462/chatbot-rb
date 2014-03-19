@@ -69,20 +69,20 @@ class SeenTell
   def update_user(data, *args)
     if args.size > 0 # Message
       user = args[0]
+      if @tells.key? user.name.downcase
+        @tell_mutex.synchronize do
+          @tells[user.name.downcase].each do |k, v|
+            @client.send_msg "#{user.name}, #{k} told you: #{v}"
+          end
+          @tells[user.name.downcase] = {}
+          File.open('tells.yml', 'w+') {|f| f.write(@tells.to_yaml)}
+        end
+      end
     else
       user = @client.userlist[data['attrs']['name']]
     end
     @seen[user.name.downcase] = Time.now.to_i
     File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
-    if @tells.key? user.name.downcase
-      @tell_mutex.synchronize do
-        @tells[user.name.downcase].each do |k, v|
-          @client.send_msg "#{user.name}, #{k} told you: #{v}"
-        end
-        @tells[user.name.downcase] = {}
-        File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
-      end
-    end
   end
 
   def get_hms(ts)
