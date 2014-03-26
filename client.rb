@@ -6,7 +6,7 @@ require_relative './util'
 require_relative 'plugins/auto_tube'
 
 $logger = Logger.new(STDOUT)
-$logger.level = Logger::INFO
+$logger.level = Logger::WARN
 module Chatbot
   class Client
     include HTTParty
