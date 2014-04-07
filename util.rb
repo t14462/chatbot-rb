@@ -12,7 +12,7 @@ end
 
 class User
   attr_reader :name
-  def initialize(name, mod, admin, staff)
+  def initialize(name, mod = false, admin = false, staff = false)
     @name = name
     @mod = mod
     @admin = admin

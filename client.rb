@@ -11,12 +11,9 @@ module Chatbot
   class Client
     include HTTParty
 
-
     USER_AGENT = 'sactage/chatbot-rb v0.0.1'
     CONFIG_FILE = 'config.yml'
-
     SOCKET_EVENTS = {'1::' => :on_socket_connect, '4:::' => :on_socket_message, '8::' => :on_socket_ping}
-
 
     attr_accessor :session, :clientid, :handlers, :config, :userlist, :api
     attr_reader :plugins
@@ -118,6 +115,7 @@ module Chatbot
         rescue Net::ReadTimeout => e
           # TODO Handle *all* the errors!
           $logger.fatal e
+          @running = false
         end
       end
       @threads.each { |thr| thr.join }
@@ -195,6 +193,11 @@ module Chatbot
 
     def send_msg(text)
       post('5:::{"name":"message","args":["{\"attrs\":{\"msgType\":\"chat\",\"text\":\"' + text.gsub('"', '\\"') + '\"}}"]}')
+    end
+
+    def quit
+      @running = false
+      post('3:::{"id":null,"cid":"'+ @clientid + '","attrs":{"msgType":"command","command":"logout"}}')
     end
   end
 end
