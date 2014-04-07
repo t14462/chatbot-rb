@@ -158,7 +158,6 @@ module Chatbot
         message = data['attrs']['text']
         user = @userlist[data['attrs']['name']]
         $logger.info "<#{user.name}> #{message}"
-        return if user.ignored?
         @handlers[:message].each { |handler| handler.call(message, user) }
       rescue => e
         $logger.fatal e
