@@ -65,12 +65,12 @@ module Chatbot
 
     def get(path: '/socket.io/1/')
       path += "xhr-polling/#{@session}" unless @session.nil?
-      self.class.get(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i, :fuckyourselfcache => rand(36**30).to_s(36)}, :headers => @headers)
+      self.class.get(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_ms}, :headers => @headers)
     end
 
     def post(body, path: '/socket.io/1/')
       path += "xhr-polling/#{@session}" unless @session.nil?
-      self.class.post(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_i, :fuckyourselfcache => rand(36**30).to_s(36)}, :body => body, :headers => @headers)
+      self.class.post(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_ms}, :body => body, :headers => @headers)
     end
 
     def run!
