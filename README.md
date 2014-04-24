@@ -1,2 +1,18 @@
 chatbot-rb
 ==========
+
+A plugin-based bot framework in Ruby for [Wikia's](http://wikia.com/) [Special:Chat](https://github.com/Wikia/app/tree/dev/extensions/wikia/Chat2) extension.
+
+Installation
+============
+To run a bot using this framework, Ruby 2.0+ is expected. I develop on the latest stable version (2.1.1 at the time of writing), and generally will not accommodate any problems that are only affect older versions of Ruby.
+
+This framework requires [HTTParty](https://rubygems.org/gems/httparty) and [mediawiki-gateway](https://rubygems.org/gems/mediawiki-gateway). You can install them both with `[sudo] gem install httparty mediawiki-gateway`.
+
+Running
+=======
+Please follow the format outlined in `main.sample.rb` and `config.sample.yml` to setup a working bot. The Wikia account used to connect to chat will not *need* bot rights, but if you're using a logging plugin or otherwise editing it will be useful.
+
+Plugins
+=======
+The plugin system for this bot is **heavily** inspired by that of [Cinch](https://github.com/cinchrb/cinch), albeit very watered down and less useful. See the example plugins for ideas on how to make your own.
