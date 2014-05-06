@@ -15,7 +15,7 @@ module Chatbot
     CONFIG_FILE = 'config.yml'
     SOCKET_EVENTS = {'1::' => :on_socket_connect, '4:::' => :on_socket_message, '8::' => :on_socket_ping}
 
-    attr_accessor :session, :clientid, :handlers, :config, :userlist, :api
+    attr_accessor :session, :clientid, :handlers, :config, :userlist, :api, :threads
     attr_reader :plugins
 
     def initialize
@@ -40,7 +40,8 @@ module Chatbot
           :part => [],
           :kick => [],
           :ban => [],
-          :update_user => []
+          :update_user => [],
+          :quitting => []
       }
     end
 
@@ -49,7 +50,10 @@ module Chatbot
         @plugins << plugin.new(self)
         @plugins.last.register
       end
+    end
 
+    def save_config
+      File.open(CONFIG_FILE, File::WRONLY) {|f| f.write(@config.to_yaml)}
     end
 
     def fetch_chat_info
@@ -118,6 +122,7 @@ module Chatbot
           @running = false
         end
       end
+      @handlers[:quitting].each {|handler| handler.call(nil)}
       @threads.each { |thr| thr.join }
     end
 
