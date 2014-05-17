@@ -5,7 +5,7 @@ require_relative './commands'
 require_relative './util'
 require_relative 'plugins/auto_tube'
 
-$logger = Logger.new(STDOUT)
+$logger = Logger.new(STDERR)
 $logger.level = Logger::WARN
 module Chatbot
   class Client
@@ -117,7 +117,6 @@ module Chatbot
             }
           end
         rescue Net::ReadTimeout => e
-          # TODO Handle *all* the errors!
           $logger.fatal e
           @running = false
         end
