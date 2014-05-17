@@ -1,5 +1,4 @@
-require 'logger'
-$logger = Logger.new STDOUT
+require 'httparty'
 class WikiLog
   include Chatbot::Plugin
   match /^updatelogs$/, :method => :update_logs_command
@@ -53,7 +52,6 @@ class WikiLog
     title = Time.now.utc.strftime @options[:title]
     text = @buffer.dup.gsub('<', '&lt;').gsub('>', '&gt;') # Ideally, this is inside a buffer lock somewhere...
     @buffer = ''
-    $logger.warn title
     page_content = @client.api.get(title)
     if @options[:type].eql? :fifo
       if page_content.scan(/\n/).size >= @options[:fifo_threshold]
@@ -62,8 +60,6 @@ class WikiLog
         text = page_content.gsub('</pre>', text + '</pre>')
       end
     else # Daily or overwrite
-      $logger.warn page_content.nil?
-      $logger.warn @options[:type]
       if page_content.nil? or @options[:type].eql? :overwrite
         text = "<pre class=\"ChatLog\">#{text}</pre>\n[[Category:#{@options[:category]}|#{Time.now.utc.strftime CATEGORY_TS}]]"
       else
@@ -132,5 +128,9 @@ class WikiLog
         @buffer << "\n" + Util::ts + " <#{user.log_name}> #{captures[0]}"
       end
     end
+  end
+
+  def get_page_contents(title)
+
   end
 end
