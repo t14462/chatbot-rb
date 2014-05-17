@@ -45,10 +45,10 @@ class Chatbot::AutoTube
   def get_hms(seconds)
     hours = seconds / 3600
     seconds %= 3600
-    minutes = seconds / 60
+    minutes = (seconds / 60).to_s.rjust(2, '0')
     seconds %= 60
-    "#{hours}:#{minutes}:#{seconds}"
-    "#{minutes}:#{seconds}" if hours == 0
+    "#{hours}:#{minutes}:#{seconds.to_s.rjust(2, '0')}"
+    "#{minutes}:#{seconds.to_s.rjust(2, '0')}" if hours == 0
   end
 
 end
