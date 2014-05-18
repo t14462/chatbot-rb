@@ -50,6 +50,7 @@ class User
   end
 
   def ignore
+    return if is? :dev
     if File.exists? 'ignore.yml'
       ignorefile = YAML::load_file('ignore.yml')
     else
