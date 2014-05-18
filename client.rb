@@ -194,8 +194,13 @@ module Chatbot
     end
     # END chat event methods
 
+    # BEGIN chat interaction methods
     def send_msg(text)
       post('5:::{"name":"message","args":["{\"attrs\":{\"msgType\":\"chat\",\"text\":\"' + text.gsub('"', '\\"') + '\"}}"]}')
+    end
+
+    def kick(user)
+      post('3:::{"id":null,"cid":"%s","attrs":{"msgType":"command","command":"kick","userToKick":"%s"}}' % [@clientid, user.gsub(/"/, "\\\"").gsub("\\", "\\\\")])
     end
 
     def quit
