@@ -5,6 +5,7 @@ class Chatbot::Admin
   match /^plugins/, :method => :list_plugins
   match /^ignore (.*)/, :method => :ignore
   match /^unignore (.*)/, :method => :unignore
+  match /^commands/, :method => :get_commands
 
   def quit(captures, user)
     if user.is? :admin
@@ -12,6 +13,12 @@ class Chatbot::Admin
       sleep 0.5
       @client.quit
     end
+  end
+
+  def get_commands(captures, user)
+    return if @client.config['wiki'].eql? 'central'
+    commands = @client.plugins.collect {|plugin| plugin.class.matchers}.collect {|matchers| matchers.select {|matcher| matcher.use_prefix}}.flatten
+    @client.send_msg(user.name + ', all defined commands are: ' + commands.collect{|m|m.pattern.to_s.gsub('(?-mix:', '/').gsub(/\$?\)$/, '/')}.join(', ') + '. (Confused? Learn regex!)')
   end
 
   def list_plugins(captures, user)
