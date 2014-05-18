@@ -17,6 +17,7 @@ class User
     @mod = mod
     @admin = admin
     @staff = staff
+    @ignored = ignored?
   end
 
   def is?(right)
@@ -39,6 +40,7 @@ class User
   end
 
   def ignored?
+    return @ignored unless @ignored.nil?
     if File.exists? 'ignore.yml'
       YAML::load_file('ignore.yml')['users'].include? @name
     else
@@ -55,6 +57,7 @@ class User
     end
     ignorefile['users'] << @name
     File.open('ignore.yml', 'w+') {|f| f.write(ignorefile.to_yaml)}
+    @ignored = true
   end
 
   def unignore
@@ -65,6 +68,7 @@ class User
     end
     ignorefile['users'].delete(@name)
     File.open('ignore.yml', 'w+') {|f| f.write(ignorefile.to_yaml)}
+    @ignored = false
   end
 end
 
