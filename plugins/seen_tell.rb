@@ -51,6 +51,8 @@ class SeenTell
       return @client.send_msg user.name + ': You can\'t !tell yourself something!'
     elsif target.downcase.eql? @client.config['user'].downcase
       return @client.send_msg user.name + ': Thanks for the message <3'
+    elsif @client.userlist.keys.collect {|name| name.downcase}.include? target.downcase
+      return @client.send_msg user.name + ': They\'re already here, go tell them yourself!'
     end
     @tell_mutex.synchronize do
       if @tells.key? target.downcase
@@ -65,7 +67,9 @@ class SeenTell
 
   def seen_user(captures, user)
     return unless @allow_seen
-    if @seen.key? captures[1].downcase
+    if @client.userlist.keys.collect {|name| name.downcase}.include? captures[1].downcase
+      @client.send_msg "#{user.name}: They're here right now!"
+    elsif @seen.key? captures[1].downcase
       @client.send_msg "#{user.name}: I last saw #{captures[1]} #{get_hms(Time.now.to_i - @seen[captures[1].downcase])}"
     else
       @client.send_msg "#{user.name}: I haven't seen #{captures[1]}"
