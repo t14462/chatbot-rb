@@ -186,7 +186,7 @@ module Chatbot
       end
     end
 
-    def on_chat_logout(data)
+    def on_chat_part(data)
       $logger.info "#{data['attrs']['name']} left the chat"
       @userlist_mutex.synchronize do
         @userlist.delete(data['attrs']['name'])
