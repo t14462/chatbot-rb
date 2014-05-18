@@ -64,6 +64,7 @@ class SeenTell
   end
 
   def seen_user(captures, user)
+    return unless @allow_seen
     if @seen.key? captures[1].downcase
       @client.send_msg "#{user.name}: I last saw #{captures[1]} #{get_hms(Time.now.to_i - @seen[captures[1].downcase])}"
     else
