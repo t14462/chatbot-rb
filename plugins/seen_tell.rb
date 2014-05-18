@@ -5,6 +5,8 @@ class SeenTell
   match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
   match /^seen (.*)/, :method => :seen_user
+  match /^tellon ?(:.+)?/, :method => :enable_tell
+  match /^telloff ?(:.+)?/, :method => :disable_tell
   match /.*/, :method => :update_user, :use_prefix => false
   listen_to :join, :update_user
 
@@ -24,9 +26,25 @@ class SeenTell
     end
     @tell_mutex = Mutex.new
     @allow_seen = true
+    @allow_tell = true
+  end
+
+  def enable_tell(captures, user)
+    if user.is? :admin and !@allow_tell
+      @allow_tell = true
+      @client.send_msg user.name + ': !tell is now enabled'
+    end
+  end
+
+  def disable_tell(captures, user)
+    if user.is? :mod and @allow_tell
+      @allow_tell = false
+      @client.send_msg user.name + ': !tell is now disabled'
+    end
   end
 
   def tell(captures, user)
+    return unless @allow_tell
     target = captures[1].gsub(/_/, ' ')
     message = captures[2]
     if target.downcase.eql? user.name.downcase
@@ -66,6 +84,7 @@ class SeenTell
       @client.send_msg "#{user.name}: !seen disabled"
     end
   end
+
   def update_user(data, *args)
     if args.size > 0 # Message
       user = args[0]
