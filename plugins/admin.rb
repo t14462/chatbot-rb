@@ -18,7 +18,7 @@ class Chatbot::Admin
   def get_commands(captures, user)
     return if @client.config['wiki'].eql? 'central'
     commands = @client.plugins.collect {|plugin| plugin.class.matchers}.collect {|matchers| matchers.select {|matcher| matcher.use_prefix}}.flatten
-    @client.send_msg(user.name + ', all defined commands are: ' + commands.collect{|m|m.pattern.to_s.gsub('(?-mix:', '/').gsub(/\$?\)$/, '/')}.join(', ') + '. (Confused? Learn regex!)')
+    @client.send_msg(user.name + ', all defined commands are: ' + commands.collect{|m|m.pattern.to_s.gsub('(?-mix:', m.prefix).gsub(/\$?\)$/, '')}.join(', ') + '. (Confused? Learn regex!)')
   end
 
   def list_plugins(captures, user)

@@ -1,0 +1,2 @@
+class SpamControl
+end
