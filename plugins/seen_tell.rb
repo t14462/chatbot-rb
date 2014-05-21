@@ -51,7 +51,7 @@ class SeenTell
       return @client.send_msg user.name + ': You can\'t !tell yourself something!'
     elsif target.downcase.eql? @client.config['user'].downcase
       return @client.send_msg user.name + ': Thanks for the message <3'
-    elsif @client.userlist.keys.collect {|name| name.downcase}.include? target.downcase
+    elsif !@client.config[:allow_tell_to_present_users] and @client.userlist.keys.collect {|name| name.downcase}.include? target.downcase
       return @client.send_msg user.name + ': They\'re already here, go tell them yourself!'
     end
     @tell_mutex.synchronize do
