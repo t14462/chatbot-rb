@@ -25,8 +25,8 @@ class SeenTell
       @seen = {}
     end
     @tell_mutex = Mutex.new
-    @allow_seen = true
-    @allow_tell = true
+    @allow_seen = @client.config[:allow_seen]
+    @allow_tell = @client.config[:allow_tell]
   end
 
   def enable_tell(captures, user)
