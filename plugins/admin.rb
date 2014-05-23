@@ -6,6 +6,7 @@ class Chatbot::Admin
   match /^ignore (.*)/, :method => :ignore
   match /^unignore (.*)/, :method => :unignore
   match /^commands/, :method => :get_commands
+  match /^source|^src|^git(?:hub)?/, :method => :source
 
   def quit(captures, user)
     if user.is? :admin
@@ -51,5 +52,8 @@ class Chatbot::Admin
     end
   end
 
+  def source(captures, user)
+    @client.send_msg "#{user.name}: My source code can be seen at https://github.com/sactage/chatbot-rb - feel free to contribute!"
+  end
 
 end
