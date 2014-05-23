@@ -11,7 +11,7 @@ module Chatbot
   class Client
     include HTTParty
 
-    USER_AGENT = 'sactage/chatbot-rb v0.0.1'
+    USER_AGENT = 'sactage/chatbot-rb v1.0.0'
     CONFIG_FILE = 'config.yml'
     SOCKET_EVENTS = {'1::' => :on_socket_connect, '4:::' => :on_socket_message, '8::' => :on_socket_ping}
 
