@@ -192,6 +192,13 @@ module Chatbot
         @userlist.delete(data['attrs']['name'])
       end
     end
+
+    def on_chat_logout(data)
+      $logger.info "#{data['attrs']['name']} left the chat"
+      @userlist_mutex.synchronize do
+        @userlist.delete(data['attrs']['name'])
+      end
+    end
     # END chat event methods
 
     # BEGIN chat interaction methods
