@@ -39,6 +39,7 @@ module Chatbot
           :join => [],
           :part => [],
           :kick => [],
+          :logout => [],
           :ban => [],
           :update_user => [],
           :quitting => []
