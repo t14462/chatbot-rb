@@ -90,10 +90,14 @@ class SeenTell
     end
   end
 
+  def fix_tell_file
+    File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => 'baz'}}.merge(@tells).to_yaml)}
+  end
+
   def update_user(data, *args)
     if args.size > 0 # Message
       user = args[0]
-      if @tells.key? user.name.downcase
+      if !@tells.nil? and @tells.key? user.name.downcase
         @tell_mutex.synchronize do
           @tells[user.name.downcase].each do |k, v|
             @client.send_msg "#{user.name}, #{k} told you: #{v}"
@@ -101,6 +105,8 @@ class SeenTell
           @tells[user.name.downcase] = {}
           File.open('tells.yml', 'w+') {|f| f.write(@tells.to_yaml)}
         end
+      elsif @tells.nil?
+        fix_tell_file
       end
     else
       user = @client.userlist[data['attrs']['name']]
