@@ -108,11 +108,15 @@ class SeenTell
       elsif @tells.nil?
         fix_tell_file
       end
+      @seen[user.name.downcase] = Time.now.to_i
+      File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     else
       user = @client.userlist[data['attrs']['name']]
+      return if @client.config[:seen_use_last_post]
+      @seen[user.name.downcase] = Time.now.to_i
+      File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     end
-    @seen[user.name.downcase] = Time.now.to_i
-    File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
+
   end
 
   def get_hms(ts)
