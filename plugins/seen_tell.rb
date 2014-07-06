@@ -67,7 +67,7 @@ class SeenTell
 
   def seen_user(captures, user)
     return unless @allow_seen
-    if @client.userlist.keys.collect {|name| name.downcase}.include? captures[1].downcase
+    if @client.userlist.keys.collect {|name| name.downcase}.include? captures[1].downcase and !@client.config[:seen_use_last_post]
       @client.send_msg "#{user.name}: They're here right now!"
     elsif @seen.key? captures[1].downcase
       @client.send_msg "#{user.name}: I last saw #{captures[1]} #{get_hms(Time.now.to_i - @seen[captures[1].downcase])}"
