@@ -27,7 +27,7 @@ class BanNotify
       |-
       |[[User:#{data['attrs']['kickedUserName']}|]]
       |#{Time.now.utc.strftime('%B %d, %Y')}
-      |To be filled in by [[User:#{data['attrs']['moderatorName']}|]]
+      |#{data['attrs']['reason']}
       |[[User:#{data['attrs']['moderatorName']}|]]
       |}
       repl
@@ -47,7 +47,7 @@ class BanNotify
       |[[User:#{data['attrs']['kickedUserName']}|]]
       |#{Time.now.utc.strftime('%B %d, %Y')}
       |#{expiry}
-      |To be filled in by [[User:#{data['attrs']['moderatorName']}|]]
+      |#{data['attrs']['reason']}
       |[[User:#{data['attrs']['moderatorName']}|]]
       |Automatically added by [[User:#{@client.config['user']}|]]
       |-
@@ -56,7 +56,7 @@ class BanNotify
       puts page_text.include? REPLACE_TEMP
       page_text.gsub!(REPLACE_TEMP, replace)
       @client.api.edit(BAN_PAGE, page_text, {:summary => "Adding ban for [[User:#{data['attrs']['kickedUserName']}|]]", :bot => 1})
-      @client.api.edit('User_talk:' + data['attrs']['kickedUserName'], "{{subst:#{BAN_TEMPLATE}|#{data['attrs']['moderatorName']}|#{expiry}|#{data['attrs']['kickedUserName'].gsub(/ /, '_')}|#{Time.now.utc.strftime("%H:%M, %B %d, %Y (UTC)")}}}", {:section => 'new'})
+      @client.api.edit('User_talk:' + data['attrs']['kickedUserName'], "{{subst:#{BAN_TEMPLATE}|#{data['attrs']['moderatorName']}|#{expiry}|#{Time.now.utc.strftime("%H:%M, %B %d, %Y (UTC)")}|#{data['attrs']['reason']}}}", {:section => 'new'})
     end
   end
 end
