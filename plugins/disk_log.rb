@@ -14,9 +14,9 @@ class Chatbot::DiskLog
     @logfile_mutex = Mutex.new
   end
 
-  def log_message(captures, user)
+  def log_message(user, message)
     @logfile_mutex.synchronize do
-      captures[0].split(/\n/).each do |line|
+      message.split(/\n/).each do |line|
         if /^\/me/.match line
           File.open("chat.log", 'a') {|f| f.write("\n" + Util::ts + " * #{user.log_name} #{line.gsub(/\/me /, '')}")}
         else

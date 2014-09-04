@@ -29,24 +29,28 @@ class SeenTell
     @allow_tell = @client.config[:allow_tell]
   end
 
-  def enable_tell(captures, user)
+  def enable_tell(user)
     if user.is? :admin and !@allow_tell
       @allow_tell = true
       @client.send_msg user.name + ': !tell is now enabled'
     end
   end
 
-  def disable_tell(captures, user)
+  def disable_tell(user)
     if user.is? :mod and @allow_tell
       @allow_tell = false
       @client.send_msg user.name + ': !tell is now disabled'
     end
   end
 
-  def tell(captures, user)
+  def tell(user, target, message)
+    puts user
+    puts target
+    puts message
+    puts @allow_tell
+    puts '----------'
     return unless @allow_tell
-    target = captures[1].gsub(/_/, ' ')
-    message = captures[2]
+    target.gsub!(/_/, ' ')
     if target.downcase.eql? user.name.downcase
       return @client.send_msg user.name + ': You can\'t !tell yourself something!'
     elsif target.downcase.eql? @client.config['user'].downcase
@@ -65,25 +69,25 @@ class SeenTell
     end
   end
 
-  def seen_user(captures, user)
+  def seen_user(user, target)
     return unless @allow_seen
-    if @client.userlist.keys.collect {|name| name.downcase}.include? captures[1].downcase and !@client.config[:seen_use_last_post]
+    if @client.userlist.keys.collect {|name| name.downcase}.include? target.downcase and !@client.config[:seen_use_last_post]
       @client.send_msg "#{user.name}: They're here right now!"
-    elsif @seen.key? captures[1].downcase
-      @client.send_msg "#{user.name}: I last saw #{captures[1]} #{get_hms(Time.now.to_i - @seen[captures[1].downcase])}"
+    elsif @seen.key? target.downcase
+      @client.send_msg "#{user.name}: I last saw #{target} #{get_hms(Time.now.to_i - @seen[target.downcase])}"
     else
-      @client.send_msg "#{user.name}: I haven't seen #{captures[1]}"
+      @client.send_msg "#{user.name}: I haven't seen #{target}"
     end
   end
 
-  def enable_seen(captures, user)
+  def enable_seen(user)
     if user.is? :mod and !@allow_seen
       @allow_seen = true
       @client.send_msg "#{user.name}: !seen enabled"
     end
   end
 
-  def disable_seen(captures, user)
+  def disable_seen(user)
     if user.is? :mod and @allow_seen
       @allow_seen = false
       @client.send_msg "#{user.name}: !seen disabled"
@@ -94,8 +98,8 @@ class SeenTell
     File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => 'baz'}}.merge(@tells).to_yaml)}
   end
 
-  def update_user(data, *args)
-    if args.size > 0 # Message
+  def update_user(*args)
+    if args.size > 1 # Message
       user = args[0]
       if !@tells.nil? and @tells.key? user.name.downcase
         @tell_mutex.synchronize do
@@ -111,7 +115,7 @@ class SeenTell
       @seen[user.name.downcase] = Time.now.to_i
       File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     else
-      user = @client.userlist[data['attrs']['name']]
+      user = @client.userlist[args[0]['attrs']['name']]
       return if @client.config[:seen_use_last_post]
       @seen[user.name.downcase] = Time.now.to_i
       File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}

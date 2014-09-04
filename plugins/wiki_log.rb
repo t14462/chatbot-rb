@@ -71,7 +71,7 @@ class WikiLog
     @client.api.edit title, text, :bot => 1, :minor => 1, :summary => 'Updating chat logs'
   end
 
-  def update_logs_command(captures, user)
+  def update_logs_command(user)
     if user.is? :mod
       @buffer_mutex.synchronize do
         lines = @buffer.scan(/\n/).size
@@ -81,11 +81,11 @@ class WikiLog
     end
   end
 
-  def logs_command(captures, user)
+  def logs_command(user)
     @client.send_msg "#{user.name}: Logs can be seen [[Project:Chat/Logs|here]]."
   end
 
-  def updated_command(captures, user)
+  def updated_command(user)
     if @last_log.nil?
       @client.send_msg "#{user.name}: I haven't updated the logs since I joined here. There are currently ~#{@buffer.scan(/\n/).size} lines in the log buffer."
     else
@@ -122,9 +122,9 @@ class WikiLog
     end
   end
 
-  def on_message(captures, user)
+  def on_message(user, message)
     @buffer_mutex.synchronize do
-      captures[0].split(/\n/).each do |line|
+      message.split(/\n/).each do |line|
         if /^\/me/.match line
           @buffer << "\n" + Util::ts + " * #{user.log_name} #{line.gsub(/\/me /, '')}"
         else

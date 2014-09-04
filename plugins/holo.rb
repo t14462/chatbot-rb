@@ -3,7 +3,7 @@ class Chatbot::Holo
   match /^Holo, I love you/, :use_prefix => false
   match /^Holo, kill/, :use_prefix => false, :method => :poor_cod4
   match /^\/me gives Holo an apple/, :use_prefix => false, :method => :apple
-  def execute(captures, user)
+  def execute(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me snuggles up to Sactage'
       @client.send_msg 'I love you too <3'
@@ -12,14 +12,14 @@ class Chatbot::Holo
     end
   end
 
-  def poor_cod4(captures, user)
+  def poor_cod4(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me breaks Callofduty4\'s neck'
       @client.send_msg 'I love you, Sactage <3'
     end
   end
 
-  def apple(captures, user)
+  def apple(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me happily chomps on the apple'
       @client.send_msg 'Thanks sweetie! <3'

@@ -1,12 +1,12 @@
 require 'httparty'
 require 'media_wiki'
 require 'logger'
-require_relative './commands'
+require_relative './plugin'
 require_relative './util'
-require_relative 'plugins/auto_tube'
 
 $logger = Logger.new(STDERR)
 $logger.level = Logger::WARN
+
 module Chatbot
   class Client
     include HTTParty
@@ -25,7 +25,8 @@ module Chatbot
       end
 
       @config = YAML::load_file CONFIG_FILE
-      @api = MediaWiki::Gateway.new "http://#{@config['wiki']}.wikia.com/api.php"
+      @base_url = @config.key?('dev') ? "http://localhost:8080" : "http://#{@config['wiki']}.wikia.com"
+      @api = MediaWiki::Gateway.new @base_url + '/api.php'
       @api.login(@config['user'], @config['password'])
       @headers = {'User-Agent' => USER_AGENT, 'Cookie' => @api.cookies.map { |k, v| "#{k}=#{v};" }.join(' '), 'Content-type' => 'text/plain;charset=UTF-8'}
       @userlist = {}
@@ -58,13 +59,18 @@ module Chatbot
     end
 
     def fetch_chat_info
-      res = HTTParty.get("http://#{@config['wiki']}.wikia.com/wikia.php?controller=Chat&format=json", :headers => @headers)
+      res = HTTParty.get("#{@base_url}/wikia.php?controller=Chat&format=json", :headers => @headers)
       data = JSON.parse(res.body, :symbolize_names => true)
+      $logger.warn data
       @key = data[:chatkey]
       @server = data[:nodeHostname]
       @room = data[:roomId]
       @mod = data[:isChatMod]
-      self.class.base_uri "http://#{@server}/"
+      if @config.key?('dev')
+        self.class.base_uri "http://#{@server}:#{data[:nodePort]}/"
+      else
+        self.class.base_uri "http://#{@server}"
+      end
       @session = get.body.match(/\d+/)[0] # *probably* should check for nil here and rescue, but I'm too lazy
     end
 
@@ -82,6 +88,7 @@ module Chatbot
       while @running
         begin
           res = get
+          $logger.warn res
           body = res.body
           if body.include? "\xef\xbf\xbd"
             body.split(/\xef\xbf\xbd/).each do |part|
@@ -141,7 +148,7 @@ module Chatbot
           json['event'] = 'update_user'
         end
         begin
-          self.method("on_chat_#{json['event']}".to_sym).call(json['data']) # TODO make this less hacky
+          self.method("on_chat_#{json['event']}".to_sym).call(json['data'])
         rescue NameError
           $logger.debug 'ignoring un-used event'
         end

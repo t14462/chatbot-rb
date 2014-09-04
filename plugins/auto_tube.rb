@@ -3,7 +3,7 @@ require 'httparty'
 class Chatbot::AutoTube
   include Chatbot::Plugin
 
-  match /https?:\/\/(?:www\.)?youtube\.com[^ ]+v=([^&# ]*)|https?:\/\/(?:www\.)?youtu\.be\/([^&#\? ]*)/im, :use_prefix => false
+  match /https?:\/\/(?:www\.)?youtube\.com[^ ]+v=([^&#\s]*)|https?:\/\/(?:www\.)?youtu\.be\/([^&#\?\s]*)/im, :use_prefix => false
   match /^yton$/, :method => :enable
   match /^ytoff$/, :method => :disable
 
@@ -12,20 +12,20 @@ class Chatbot::AutoTube
     @on = true
   end
 
-  def execute(captures, user)
-    return if user.ignored? or user.name == @client.config['user'] or !@on
-    video_id = captures[1].nil? ? captures[2] : captures[1]
+  def execute(user, vid1, vid2)
+    return if user.name == @client.config['user'] or !@on
+    video_id = vid1.nil? ? vid2 : vid1
     @client.send_msg fetch_video_info(video_id)
   end
 
-  def enable(captures, user)
+  def enable(user)
     if !@on and user.is? :mod
       @on = true
       @client.send_msg "#{user.name}: YouTube info enabled!"
     end
   end
 
-  def disable(captures, user)
+  def disable(user)
     if @on and user.is? :mod
       @client.send_msg "#{user.name}: YouTube info disabled :("
       @on = false
