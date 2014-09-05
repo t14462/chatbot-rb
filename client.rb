@@ -28,7 +28,17 @@ module Chatbot
       @base_url = @config.key?('dev') ? "http://localhost:8080" : "http://#{@config['wiki']}.wikia.com"
       @api = MediaWiki::Gateway.new @base_url + '/api.php'
       @api.login(@config['user'], @config['password'])
-      @headers = {'User-Agent' => USER_AGENT, 'Cookie' => @api.cookies.map { |k, v| "#{k}=#{v};" }.join(' '), 'Content-type' => 'text/plain;charset=UTF-8'}
+      @t = 0
+      @headers = {
+          'User-Agent' => USER_AGENT,
+          'Cookie' => @api.cookies.map { |k, v| "#{k}=#{v};" }.join(' ') + ' io=VQF8sXJkKNFVfo9wAAUi;',
+          'Content-type' => 'text/plain;charset=UTF-8',
+          'Pragma' => 'no-cache',
+          'Cache-Control' => 'no-cache',
+          'Connection' => 'keep-alive',
+          'Accept' => '*/*',
+
+      }
       @userlist = {}
       @userlist_mutex = Mutex.new
       @running = true
@@ -61,27 +71,38 @@ module Chatbot
     def fetch_chat_info
       res = HTTParty.get("#{@base_url}/wikia.php?controller=Chat&format=json", :headers => @headers)
       data = JSON.parse(res.body, :symbolize_names => true)
-      $logger.warn data
       @key = data[:chatkey]
-      @server = data[:nodeHostname]
+      @server = data[:nodeInstance]
       @room = data[:roomId]
       @mod = data[:isChatMod]
+      @request_options = {
+          :user => @config['user'],
+          :EIO => 2,
+          :transport => 'polling',
+          :key => @key,
+          :roomId => @room,
+          :serverId => @server
+      }
       if @config.key?('dev')
-        self.class.base_uri "http://#{@server}:#{data[:nodePort]}/"
+        self.class.base_uri "http://#{data[:nodeHostname]}:#{data[:nodePort]}/"
       else
-        self.class.base_uri "http://#{@server}"
+        self.class.base_uri "http://#{data[:nodeHostname]}/"
       end
-      @session = get.body.match(/\d+/)[0] # *probably* should check for nil here and rescue, but I'm too lazy
+      @request_options[:sid] = get.headers['set-cookie'].gsub(/io=/,'')
+      @headers['Cookie'] += " io=#{@request_options[:sid]};"
+      #@session = get.body.match(/\d+/)[0] # *probably* should check for nil here and rescue, but I'm too lazy
     end
 
-    def get(path: '/socket.io/1/')
-      path += "xhr-polling/#{@session}" unless @session.nil?
-      self.class.get(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_ms}, :headers => @headers)
+    def get(path: '/socket.io/')
+      opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @t.to_s})
+      @t +=1
+      self.class.get(path, :query => opts, :headers => @headers)
     end
 
-    def post(body, path: '/socket.io/1/')
-      path += "xhr-polling/#{@session}" unless @session.nil?
-      self.class.post(path, :query => {:name => @config['user'], :key => @key, :roomId => @room, :t => Time.now.to_ms}, :body => body, :headers => @headers)
+    def post(body, path: '/socket.io/')
+      opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @t.to_s})
+      @t += 1
+      self.class.post(path, :query => opts, :body => body, :headers => @headers)
     end
 
     def run!
