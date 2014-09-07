@@ -72,6 +72,7 @@ module Chatbot
       @server = data[:nodeInstance]
       @room = data[:roomId]
       @mod = data[:isChatMod]
+      @initialized = false
       @request_options = {
           :name => @config['user'],
           :EIO => 2,
@@ -86,7 +87,6 @@ module Chatbot
         self.class.base_uri "http://#{data[:nodeHostname]}/"
       end
       res = get
-      #$logger.warn res
       @request_options[:sid] = JSON.parse(res.body[5,res.body.size-1], :symbolize_names => true)[:sid]
       @headers['Cookie'] = res.headers['set-cookie']
     end
@@ -99,7 +99,6 @@ module Chatbot
 
     def post(body)
       body = Util::format_message(body == :ping ? '2' : '42' + ["message",{:id => nil,:attrs => body}.to_json].to_json)
-      #$logger.warn body.inspect
       opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @t.to_s})
       @t += 1
       self.class.post('/socket.io/', :query => opts, :body => body, :headers => @headers)
@@ -113,57 +112,20 @@ module Chatbot
           # Without the above call to .encode() and .sub(), Ruby will continuously error and tell me that UTF-8 and
           # ASCII-8BIT encodings are incompatible. I cannot wait for the day I can get ruby 2.1.x on my Windows machine
           # and can use String.scrub() instead.
-          exit!(1) if body.include? "Session ID unknown"
-          #if body.match(/join/) and body.match("URL")
-          #  post(:msgType => :command, :command => :initquery)
-          #  ping_thr
-          #end
-          #send_msg("foo bar") if body.match(/initial/)
+          puts @running = false if body.include? "Session ID unknown" # This essentially means chat forcibly removed us.
           if body.match(/^42/)
-            @threads << Thread.new(body) {
-              on_socket_message(body.gsub(/^42/,''))
-            }
-
-          end
-
-#
-=begin
-          if body.include? "\xef\xbf\xbd"
-            body.split(/\xef\xbf\xbd/).each do |part|
-              next unless part.size > 10
-              event = part.match(/\d:::?/)[0]
-              data = part.sub(event, '')
-              @threads << Thread.new(event, data) {
-                case event
-                  when '1::'
-                    on_socket_connect
-                  when '8::'
-                    on_socket_ping
-                  when '4:::'
-                    on_socket_message(data)
-                  else
-                    1
-                end
+            if body.scan(/\u000042/).size > 0
+              body.split(/\u0000.{1,7}\u0000/).each do |packet|
+                @threads << Thread.new(packet) {
+                  on_socket_message(packet.gsub(/^42/, ''))
+                }
+              end
+            else
+              @threads << Thread.new(body) {
+               on_socket_message(body.gsub(/^42/, ''))
               }
             end
-          else
-            $logger.warn body
-            event = body.match(/\d:::?/)[0]
-            data = body.sub(event, '')
-            @threads << Thread.new(event, data) {
-              case event
-                when '1::'
-                  on_socket_connect
-                when '8::'
-                  on_socket_ping
-                when '4:::'
-                  on_socket_message(data)
-                else
-                  1
-              end
-            }
           end
-=end
         rescue Net::ReadTimeout => e
           $logger.fatal e
           @running = false
@@ -173,7 +135,6 @@ module Chatbot
       @threads.each { |thr| thr.join }
     end
 
-    # BEGIN socket event methods
     def on_socket_connect
       $logger.info 'Connected to chat!'
     end
@@ -209,7 +170,7 @@ module Chatbot
       begin
         message = data['attrs']['text']
         user = @userlist[data['attrs']['name']]
-        $logger.info "<#{user.name}> #{message}"
+        return post(:msgType => :command, :command => :initquery) unless @initialized and !user.nil?
         @handlers[:message].each { |handler| handler.call(message, user) }
       rescue => e
         $logger.fatal e
@@ -229,29 +190,25 @@ module Chatbot
         attrs = user['attrs']
         @userlist[attrs['name']] = User.new(attrs['name'], attrs['isModerator'], attrs['isCanGiveChatMod'], attrs['isStaff'])
       end
+      @initialized = true
     end
 
     def on_chat_join(data)
-      if data['attrs']['name'] == @config['user'] and @clientid.nil?
-        @clientid = data['cid']
+      if data['attrs']['name'] == @config['user'] and !@initialized
         post(:msgType => :command, :command => :initquery)
-        #post('3:::{"id":null,"cid":"' + @clientid + '","attrs":{"msgType":"command","command":"initquery"}}')
       end
-      $logger.info "#{data['attrs']['name']} joined the chat"
       @userlist_mutex.synchronize do
         @userlist[data['attrs']['name']] = User.new(data['attrs']['name'], data['attrs']['isModerator'], data['attrs']['isCanGiveChatMod'], data['attrs']['isStaff'])
       end
     end
 
     def on_chat_part(data)
-      $logger.info "#{data['attrs']['name']} left the chat"
       @userlist_mutex.synchronize do
         @userlist.delete(data['attrs']['name'])
       end
     end
 
     def on_chat_logout(data)
-      $logger.info "#{data['attrs']['name']} left the chat"
       @userlist_mutex.synchronize do
         @userlist.delete(data['attrs']['name'])
       end
@@ -261,17 +218,15 @@ module Chatbot
     # BEGIN chat interaction methods
     def send_msg(text)
       post(:msgType => :chat, :text => text)
-      #post('5:::{"name":"message","args":["{\"attrs\":{\"msgType\":\"chat\",\"text\":\"' + text.gsub('"', '\\"') + '\"}}"]}')
     end
 
     def kick(user)
       post(:msgType => :command, :command => :kick, :userToKick => user)
-      #post('3:::{"id":null,"cid":"%s","attrs":{"msgType":"command","command":"kick","userToKick":"%s"}}' % [@clientid, user.gsub(/"/, "\\\"").gsub("\\", "\\\\")])
     end
 
     def quit
       @running = false
-      post('3:::{"id":null,"cid":"'+ @clientid + '","attrs":{"msgType":"command","command":"logout"}}')
+      post(:msgType => :command, :command => :logout)
     end
   end
 end

@@ -58,6 +58,7 @@ module Chatbot
             method = method(matcher.method)
             method.call(user, *match.captures)
           rescue => err
+            @client.send_msg(err.inspect + ' in ' + err.backtrace[0]) if user.is? :dev
             $logger.fatal err
           end
         end
