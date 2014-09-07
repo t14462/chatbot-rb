@@ -75,6 +75,4 @@ module Chatbot
       by.extend ClassMethods
     end
   end
-
-
 end
