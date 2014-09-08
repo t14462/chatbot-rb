@@ -5,7 +5,7 @@ class WikiLog
   match /^updatelogs$/, :method => :update_logs_command
   match /^logs$/, :method => :logs_command
   match /^updated$/, :method => :updated_command
-  match /.*/, :method => :on_message, :use_prefix => false
+  match /(.*)/, :method => :on_message, :use_prefix => false
 
   listen_to :join, :on_join
   listen_to :part, :on_part
