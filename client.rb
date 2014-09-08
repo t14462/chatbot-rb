@@ -11,7 +11,7 @@ module Chatbot
   class Client
     include HTTParty
 
-    USER_AGENT = 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103 Safari/537.36'#'sactage/chatbot-rb v1.0.0'
+    USER_AGENT = 'sactage/chatbot-rb v2.0.0 (fyi socket.io sucks) [http://github.com/sactage/chatbot-rb]'
     CONFIG_FILE = 'config.yml'
 
     attr_accessor :session, :clientid, :handlers, :config, :userlist, :api, :threads
@@ -109,10 +109,10 @@ module Chatbot
         begin
           res = get
           body = res.body.encode('utf-8', 'binary', :invalid => :replace, :undef => :replace, :replace => "\000").sub(/^[^\d]+/,'')
-          # Without the above call to .encode() and .sub(), Ruby will continuously error and tell me that UTF-8 and
+          # Without the above call to .encode() and .sub(), Ruby will error and tell me that UTF-8 and
           # ASCII-8BIT encodings are incompatible. I cannot wait for the day I can get ruby 2.1.x on my Windows machine
-          # and can use String.scrub() instead.
-          puts @running = false if body.include? "Session ID unknown" # This essentially means chat forcibly removed us.
+          # and can use String.scrub() instead. (yes, I still develop on Windows sometimes)
+          @running = false if body.include? "Session ID unknown" # This essentially means chat forcibly removed us.
           if body.match(/^42/)
             if body.scan(/\u000042/).size > 0
               body.split(/\u0000.{1,7}\u0000/).each do |packet|
@@ -126,7 +126,7 @@ module Chatbot
               }
             end
           end
-        rescue Net::ReadTimeout => e
+        rescue => e
           $logger.fatal e
           @running = false
         end
@@ -163,9 +163,6 @@ module Chatbot
       post('8::')
     end
 
-    # END socket event methods
-
-    # BEGIN chat event methods
     def on_chat_message(data)
       begin
         message = data['attrs']['text']
@@ -184,6 +181,7 @@ module Chatbot
         ping_thr
       }
     end
+
     def on_chat_initial(data)
       ping_thr
       data['collections']['users']['models'].each do |user|
@@ -213,9 +211,7 @@ module Chatbot
         @userlist.delete(data['attrs']['name'])
       end
     end
-    # END chat event methods
 
-    # BEGIN chat interaction methods
     def send_msg(text)
       post(:msgType => :chat, :text => text)
     end
