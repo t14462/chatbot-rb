@@ -1,3 +1,4 @@
+# encoding: ASCII-8BIT
 require 'json'
 module JSON
   def self.is_json?(foo)
@@ -77,6 +78,14 @@ module Util
   LOG_TS_FORMAT = "[%Y-%m-%d %H:%M:%S]"
   def self.ts
     Time.now.utc.strftime LOG_TS_FORMAT
+  end
+
+  def self.int_to_stupid(num)
+    "\x00" + num.to_s.scan(/\d/).collect{|d|d.to_i.chr}.join('') + "\xFF"
+  end
+
+  def self.format_message(message)
+    int_to_stupid(message.size) + message
   end
 end
 
