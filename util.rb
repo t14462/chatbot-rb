@@ -85,6 +85,7 @@ module Util
   end
 
   def self.format_message(message)
+    message = message.force_encoding('ASCII-8BIT')
     int_to_stupid(message.size) + message
   end
 end

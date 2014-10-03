@@ -62,7 +62,7 @@ module Chatbot
     end
 
     def save_config
-      File.open(CONFIG_FILE, File::WRONLY) {|f| f.write(@config.to_yaml)}
+      File.open(CONFIG_FILE, File::WRONLY) { |f| f.write(@config.to_yaml) }
     end
 
     def fetch_chat_info
@@ -87,7 +87,7 @@ module Chatbot
         self.class.base_uri "http://#{data[:nodeHostname]}/"
       end
       res = get
-      @request_options[:sid] = JSON.parse(res.body[5,res.body.size-1], :symbolize_names => true)[:sid]
+      @request_options[:sid] = JSON.parse(res.body[5, res.body.size-1], :symbolize_names => true)[:sid]
       @headers['Cookie'] = res.headers['set-cookie']
     end
 
@@ -98,7 +98,7 @@ module Chatbot
     end
 
     def post(body)
-      body = Util::format_message(body == :ping ? '2' : '42' + ["message",{:id => nil,:attrs => body}.to_json].to_json)
+      body = Util::format_message(body == :ping ? '2' : '42' + ["message", {:id => nil, :attrs => body}.to_json].to_json)
       opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @t.to_s})
       @t += 1
       self.class.post('/socket.io/', :query => opts, :body => body, :headers => @headers)
@@ -108,30 +108,21 @@ module Chatbot
       while @running
         begin
           res = get
-          body = res.body.encode('utf-8', 'binary', :invalid => :replace, :undef => :replace, :replace => "\000").sub(/^[^\d]+/,'')
-          # Without the above call to .encode() and .sub(), Ruby will error and tell me that UTF-8 and
-          # ASCII-8BIT encodings are incompatible. I cannot wait for the day I can get ruby 2.1.x on my Windows machine
-          # and can use String.scrub() instead. (yes, I still develop on Windows sometimes)
+          body = res.body
+          spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
+          next unless spl
           @running = false if body.include? "Session ID unknown" # This essentially means chat forcibly removed us.
-          if body.match(/^42/)
-            if body.scan(/\u000042/).size > 0
-              body.split(/\u0000.{1,7}\u0000/).each do |packet|
-                @threads << Thread.new(packet) {
-                  on_socket_message(packet.gsub(/^42/, ''))
-                }
-              end
-            else
-              @threads << Thread.new(body) {
-               on_socket_message(body.gsub(/^42/, ''))
-              }
-            end
+          spl.captures.each do |message|
+            @threads << Thread.new(message) {
+              on_socket_message(message.gsub(/^42/, ''))
+            } if message.match(/^42/)
           end
         rescue => e
           $logger.fatal e
           @running = false
         end
       end
-      @handlers[:quitting].each {|handler| handler.call(nil)}
+      @handlers[:quitting].each { |handler| handler.call(nil) }
       @threads.each { |thr| thr.join }
     end
 
@@ -153,7 +144,7 @@ module Chatbot
         rescue NameError
           $logger.debug 'ignoring un-used event'
         end
-        @handlers[json['event'].to_sym].each {|handler| handler.call(json['data'])} if json['event'] != 'message' and @handlers.key? json['event'].to_sym
+        @handlers[json['event'].to_sym].each { |handler| handler.call(json['data']) } if json['event'] != 'message' and @handlers.key? json['event'].to_sym
       rescue => e
         $logger.fatal e
       end
@@ -167,7 +158,7 @@ module Chatbot
       begin
         message = data['attrs']['text']
         user = @userlist[data['attrs']['name']]
-        return post(:msgType => :command, :command => :initquery) unless @initialized and !user.nil?
+        # return post(:msgType => :command, :command => :initquery) unless @initialized and !user.nil?
         @handlers[:message].each { |handler| handler.call(message, user) }
       rescue => e
         $logger.fatal e
