@@ -109,9 +109,12 @@ module Chatbot
         begin
           res = get
           body = res.body
+          if body.include? "Session ID unknown"
+            @running = false
+            break
+          end
           spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
           next unless spl
-          @running = false if body.include? "Session ID unknown" # This essentially means chat forcibly removed us.
           spl.captures.each do |message|
             @threads << Thread.new(message) {
               on_socket_message(message.gsub(/^42/, ''))
