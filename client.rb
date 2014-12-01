@@ -109,7 +109,8 @@ module Chatbot
         begin
           res = get
           body = res.body
-          if body.include? "Session ID unknown"
+          spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
+          if spl.nil? and body.include? "Session ID unknown"
             @running = false
             break
           end
