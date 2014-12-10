@@ -1,8 +1,13 @@
+require_relative '../plugin'
+
 class Chatbot::Holo
   include Chatbot::Plugin
+
   match /^Holo, I love you/, :use_prefix => false
   match /^Holo, kill/, :use_prefix => false, :method => :poor_cod4
   match /^\/me gives Holo an apple/, :use_prefix => false, :method => :apple
+
+  # @param [User] user
   def execute(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me snuggles up to Sactage'
@@ -12,6 +17,7 @@ class Chatbot::Holo
     end
   end
 
+  # @param [User] user
   def poor_cod4(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me breaks Callofduty4\'s neck'
@@ -19,6 +25,7 @@ class Chatbot::Holo
     end
   end
 
+  # @param [User] user
   def apple(user)
     if user.name.eql? 'Sactage'
       @client.send_msg '/me happily chomps on the apple'

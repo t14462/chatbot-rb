@@ -1,4 +1,5 @@
 require 'httparty'
+require_relative '../plugin'
 
 class Chatbot::AutoTube
   include Chatbot::Plugin
@@ -12,6 +13,9 @@ class Chatbot::AutoTube
     @on = true
   end
 
+  # @param [User] user
+  # @param [String] vid1
+  # @param [String] vid2
   def execute(user, vid1, vid2)
     return if user.name == @client.config['user'] or !@on
     video_id = vid1.nil? ? vid2 : vid1

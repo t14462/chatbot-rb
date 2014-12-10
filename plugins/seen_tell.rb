@@ -1,3 +1,5 @@
+require_relative '../plugin'
+
 class SeenTell
   include Chatbot::Plugin
 
@@ -10,6 +12,7 @@ class SeenTell
   match /.*/, :method => :update_user, :use_prefix => false
   listen_to :join, :update_user
 
+  # @param [Client] bot
   def initialize(bot)
     super(bot)
     if File.exists? 'tells.yml'
@@ -29,6 +32,7 @@ class SeenTell
     @allow_tell = @client.config[:allow_tell]
   end
 
+  # @param [User] user
   def enable_tell(user)
     if user.is? :admin and !@allow_tell
       @allow_tell = true
@@ -36,6 +40,7 @@ class SeenTell
     end
   end
 
+  # @param [User] user
   def disable_tell(user)
     if user.is? :mod and @allow_tell
       @allow_tell = false
@@ -43,12 +48,10 @@ class SeenTell
     end
   end
 
+  # @param [User] user
+  # @param [String] target
+  # @param [String] message
   def tell(user, target, message)
-    puts user
-    puts target
-    puts message
-    puts @allow_tell
-    puts '----------'
     return unless @allow_tell
     target.gsub!(/_/, ' ')
     if target.downcase.eql? user.name.downcase
@@ -69,6 +72,8 @@ class SeenTell
     end
   end
 
+  # @param [User] user
+  # @param [String] target
   def seen_user(user, target)
     return unless @allow_seen
     if @client.userlist.keys.collect {|name| name.downcase}.include? target.downcase and !@client.config[:seen_use_last_post]
@@ -80,6 +85,7 @@ class SeenTell
     end
   end
 
+  # @param [User] user
   def enable_seen(user)
     if user.is? :mod and !@allow_seen
       @allow_seen = true
@@ -87,6 +93,7 @@ class SeenTell
     end
   end
 
+  # @param [User] user
   def disable_seen(user)
     if user.is? :mod and @allow_seen
       @allow_seen = false
@@ -99,6 +106,7 @@ class SeenTell
   end
 
   def update_user(*args)
+    # @type [User] user
     if args.size > 1 # Message
       user = args[0]
       if !@tells.nil? and @tells.key? user.name.downcase
@@ -120,9 +128,10 @@ class SeenTell
       @seen[user.name.downcase] = Time.now.to_i
       File.open('seen.yml', File::WRONLY) {|f| f.write(@seen.to_yaml)}
     end
-
   end
 
+  # @param [FixNum] ts
+  # @return [String]
   def get_hms(ts)
     weeks = ts / 604800
     ts %= 604800
@@ -137,7 +146,6 @@ class SeenTell
     ret += "#{days} day#{days > 1 ? 's' : ''}, " if days > 0
     ret += "#{hours} hour#{hours > 1 ? 's' : ''}, " if hours > 0
     ret += "#{minutes} minute#{minutes > 1 ? 's' : ''}, " if minutes > 0
-    ret.gsub(/, $/, " and ") + "#{ts} second#{ts != 1 ? 's' : ''} ago."
-
+    ret.gsub(/, $/, ' and ') + "#{ts} second#{ts != 1 ? 's' : ''} ago."
   end
 end

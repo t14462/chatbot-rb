@@ -1,3 +1,5 @@
+require_relative '../plugin'
+
 class BanNotify
   include Chatbot::Plugin
 
@@ -17,6 +19,7 @@ class BanNotify
     |-
   repl
 
+  # @param [Hash] data
   def execute(data)
     seconds = data['attrs']['time'].to_i
     return if seconds == 0
@@ -53,7 +56,6 @@ class BanNotify
       |-
       repl
       page_text = @client.api.get(BAN_PAGE)
-      puts page_text.include? REPLACE_TEMP
       page_text.gsub!(REPLACE_TEMP, replace)
       @client.api.edit(BAN_PAGE, page_text, {:summary => "Adding ban for [[User:#{data['attrs']['kickedUserName']}|]]", :bot => 1})
       @client.api.edit('User_talk:' + data['attrs']['kickedUserName'], "{{subst:#{BAN_TEMPLATE}|#{data['attrs']['moderatorName']}|#{expiry}|#{Time.now.utc.strftime("%H:%M, %B %d, %Y (UTC)")}|#{data['attrs']['reason']}}}", {:section => 'new'})
