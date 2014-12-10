@@ -106,7 +106,6 @@ class SeenTell
   end
 
   def update_user(*args)
-    # @type [User] user
     if args.size > 1 # Message
       user = args[0]
       if !@tells.nil? and @tells.key? user.name.downcase
