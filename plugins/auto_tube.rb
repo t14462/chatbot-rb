@@ -8,6 +8,7 @@ class Chatbot::AutoTube
   match /^yton$/, :method => :enable
   match /^ytoff$/, :method => :disable
 
+  # @param [Chatbot::Client] bot
   def initialize(bot)
     super(bot)
     @on = true

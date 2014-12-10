@@ -11,7 +11,7 @@ class Chatbot::DiskLog
   listen_to :ban, :log_ban
 
 
-  # @param [Client] bot
+  # @param [Chatbot::Client] bot
   def initialize(bot)
     super(bot)
     @logfile_mutex = Mutex.new

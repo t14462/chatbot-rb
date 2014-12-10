@@ -3,6 +3,7 @@ require_relative '../plugin'
 
 class WikiLog
   include Chatbot::Plugin
+
   match /^updatelogs$/, :method => :update_logs_command
   match /^logs$/, :method => :logs_command
   match /^updated$/, :method => :updated_command
@@ -17,7 +18,7 @@ class WikiLog
   CATEGORY_TS = "%Y %m %d"
   attr_accessor :log_thread, :buffer, :buffer_mutex
 
-  # @param [Client] bot
+  # @param [Chatbot::Client] bot
   def initialize(bot)
     super(bot)
     @buffer = ''
@@ -34,7 +35,6 @@ class WikiLog
       }
       @client.save_config
     end
-    # @type [Hash] @options
     @options = @client.config[:wikilog]
   end
 

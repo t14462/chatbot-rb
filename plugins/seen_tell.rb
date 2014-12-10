@@ -12,7 +12,7 @@ class SeenTell
   match /.*/, :method => :update_user, :use_prefix => false
   listen_to :join, :update_user
 
-  # @param [Client] bot
+  # @param [Chatbot::Client] bot
   def initialize(bot)
     super(bot)
     if File.exists? 'tells.yml'
