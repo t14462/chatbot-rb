@@ -13,6 +13,8 @@ end
 
 class User
   attr_reader :name
+
+  # @param [String] name
   def initialize(name, mod = false, admin = false, staff = false)
     @name = name
     @mod = mod
@@ -21,6 +23,13 @@ class User
     @ignored = ignored?
   end
 
+  # Check if a user has the given privilege. Privileges cascade, so:
+  #    - +:mod+ returns true if user is +:dev+, +:staff+, +:admin+, or +:mod+
+  #    - +:admin+ returns true if user is +:dev+, +:staff+, or +:admin+
+  #    - +:staff+ returns true if user is +:dev+ or +:staff+
+  #    - +:dev+ returns true if and only if <tt>@name == 'Sactage'</tt>
+  # @param [Symbol] right
+  # @return [TrueClass, FalseClass]
   def is?(right)
     case right
       when :mod
@@ -36,10 +45,13 @@ class User
     end
   end
 
+  # @return [String] The user's name with underscores instead of spaces
   def log_name
     @name.gsub(' ', '_')
   end
 
+  # Check if the user is ignored
+  # @return [TrueClass, FalseClass]
   def ignored?
     return @ignored unless @ignored.nil?
     if File.exists? 'ignore.yml'
@@ -50,8 +62,10 @@ class User
     end
   end
 
+  # Ignore the user
   def ignore
     return if is? :dev
+    # @type [Hash] ignorefile
     if File.exists? 'ignore.yml'
       ignorefile = YAML::load_file('ignore.yml')
     else
@@ -62,6 +76,7 @@ class User
     @ignored = true
   end
 
+  # Unignore the user
   def unignore
     if File.exists? 'ignore.yml'
       ignorefile = YAML::load_file('ignore.yml')
@@ -75,15 +90,23 @@ class User
 end
 
 module Util
-  LOG_TS_FORMAT = "[%Y-%m-%d %H:%M:%S]"
+  LOG_TS_FORMAT = '[%Y-%m-%d %H:%M:%S]'
+
+  # @return [String] Log timestamp string of current time
   def self.ts
     Time.now.utc.strftime LOG_TS_FORMAT
   end
 
+  # Transform a Fixnum into a +stupid+ format
+  # @param [Fixnum] num
+  # @return [String]
   def self.int_to_stupid(num)
     "\x00" + num.to_s.scan(/\d/).collect{|d|d.to_i.chr}.join('') + "\xFF"
   end
 
+  # Format the given string into a socket.io-readable format
+  # @param [String] message
+  # @return [String]
   def self.format_message(message)
     message = message.force_encoding('ASCII-8BIT')
     int_to_stupid(message.size) + message
@@ -91,6 +114,7 @@ module Util
 end
 
 class Time
+  # @return [Fixnum] The time since the UNIX epoch in micro-seconds
   def to_ms
     (self.to_f * 1000.0).to_i
   end

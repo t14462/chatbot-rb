@@ -1,9 +1,12 @@
 module Chatbot
-  # Much of this logic is a watered-down/modified from Cinch's plugin system
+  # Plugin mix-ins for Client
+  #
+  # Much of this logic is a watered-down/modified from {Cinch's}[https://github.com/cinchrb/cinch] plugin system
   # Thanks to them <3
   module Plugin
     attr_reader :client
 
+    # @param [Chatbot::Client] client
     def initialize(client)
       @client = client
     end
@@ -13,6 +16,7 @@ module Chatbot
       Matcher = Struct.new(:pattern, :use_prefix, :method, :prefix)
       Listener = Struct.new(:event, :method)
 
+      # @param [Regexp] pattern
       def match(pattern, options = {})
         options = {
             :use_prefix => true,
@@ -24,6 +28,8 @@ module Chatbot
         matcher
       end
 
+      # @param [Symbol] event
+      # @param [Symbol] method
       def listen_to(event, method)
         listener = Listener.new(event, method)
         @listeners << listener
@@ -40,15 +46,18 @@ module Chatbot
 
     def register
       self.class.matchers.each do |matcher|
-        @client.handlers[:message] << Proc.new do |message, user|
+        @client.handlers[:message] << Proc.new do
+        # @type [String] message
+        # @type [User] user
+        |message, user|
           begin
             if matcher.use_prefix
               next unless message[0] == matcher.prefix
               message = message[1..-1]
             end
             # Ignore users, *except* when it's a catch-all regex (otherwise, disk_log / wiki_log won't ever log them!)
-            next if user.ignored? and not matcher.pattern.eql? /.*/
-            if matcher.pattern.eql? /.*/
+            next if user.ignored? and not matcher.pattern.eql? /(.*)/
+            if matcher.pattern.eql? /(.*)/
               method = method(matcher.method)
               method.call(user, message)
               next
