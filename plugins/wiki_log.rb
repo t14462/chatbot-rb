@@ -1,4 +1,5 @@
 require 'httparty'
+require_relative '../plugin'
 
 class WikiLog
   include Chatbot::Plugin
@@ -15,6 +16,8 @@ class WikiLog
 
   CATEGORY_TS = "%Y %m %d"
   attr_accessor :log_thread, :buffer, :buffer_mutex
+
+  # @param [Client] bot
   def initialize(bot)
     super(bot)
     @buffer = ''
@@ -31,9 +34,11 @@ class WikiLog
       }
       @client.save_config
     end
+    # @type [Hash] @options
     @options = @client.config[:wikilog]
   end
 
+  # @return [Thread]
   def make_thread
     thr = Thread.new(@options) {
       sleep @options[:log_interval]
@@ -42,6 +47,7 @@ class WikiLog
     @client.threads << thr
     thr
   end
+
 
   def update(in_thr=false)
     @log_thread.kill unless in_thr
@@ -71,6 +77,7 @@ class WikiLog
     @client.api.edit title, text, :bot => 1, :minor => 1, :summary => 'Updating chat logs'
   end
 
+  # @param [User] user
   def update_logs_command(user)
     if user.is? :mod
       @buffer_mutex.synchronize do
@@ -81,10 +88,12 @@ class WikiLog
     end
   end
 
+  # @param [User] user
   def logs_command(user)
     @client.send_msg "#{user.name}: Logs can be seen [[Project:Chat/Logs|here]]."
   end
 
+  # @param [User] user
   def updated_command(user)
     if @last_log.nil?
       @client.send_msg "#{user.name}: I haven't updated the logs since I joined here. There are currently ~#{@buffer.scan(/\n/).size} lines in the log buffer."
@@ -98,34 +107,42 @@ class WikiLog
     update_logs
   end
 
+  # @param [Hash] data
   def on_ban(data)
     @buffer_mutex.synchronize do
       @buffer << "\n" + Util::ts + " -!- #{data['attrs']['kickedUserName']} was banned from Special:Chat by #{data['attrs']['moderatorName']}"
     end
   end
 
+  # @param [Hash] data
   def on_kick(data)
     @buffer_mutex.synchronize do
       @buffer << "\n" + Util::ts + " -!- #{data['attrs']['kickedUserName']} was kicked from Special:Chat by #{data['attrs']['moderatorName']}"
     end
   end
 
+  # @param [Hash] data
   def on_part(data)
     @buffer_mutex.synchronize do
       @buffer << "\n" + Util::ts + " -!- #{data['attrs']['name']} has left Special:Chat"
     end
   end
 
+  # @param [Hash] data
   def on_join(data)
     @buffer_mutex.synchronize do
       @buffer << "\n" + Util::ts + " -!- #{data['attrs']['name']} has joined Special:Chat"
     end
   end
 
+  # @param [User] user
+  # @param [String] message
   def on_message(user, message)
     @buffer_mutex.synchronize do
       message.split(/\n/).each do |line|
-        if /^\/me/.match line
+        if /^\/me/.match(line) and message.start_with? '/me'
+          @buffer << "\n" + Util::ts + " * #{user.log_name} #{line.gsub(/\/me /, '')}"
+        elsif message.start_with? '/me'
           @buffer << "\n" + Util::ts + " * #{user.log_name} #{line.gsub(/\/me /, '')}"
         else
           @buffer << "\n" + Util::ts + " <#{user.log_name}> #{line}"
@@ -135,6 +152,8 @@ class WikiLog
   end
 
   # Gets the current text of a page - @client.api.get() will return nil and generally screw things up
+  # @param [String] title
+  # @return [String]
   def get_page_contents(title)
     res = HTTParty.get(
         "http://#{@client.config['wiki']}.wikia.com/index.php",
