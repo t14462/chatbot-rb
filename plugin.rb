@@ -56,8 +56,8 @@ module Chatbot
               message = message[1..-1]
             end
             # Ignore users, *except* when it's a catch-all regex (otherwise, disk_log / wiki_log won't ever log them!)
-            next if user.ignored? and not matcher.pattern.eql? /(.*)/
-            if matcher.pattern.eql? /(.*)/
+            next if user.ignored? and not matcher.pattern.eql? /(.*)/ and not matcher.pattern.eql? /.*/
+            if matcher.pattern.eql? /(.*)/ or matcher.pattern.eql? /.*/
               method = method(matcher.method)
               method.call(user, message)
               next
