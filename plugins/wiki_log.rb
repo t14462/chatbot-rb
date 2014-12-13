@@ -50,7 +50,7 @@ class WikiLog
 
 
   def update(in_thr=false)
-    @log_thread.kill unless in_thr
+    Thread.kill(@log_thread) unless in_thr
     update_logs
     @log_thread = make_thread
   end
