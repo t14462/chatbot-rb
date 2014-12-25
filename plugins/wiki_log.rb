@@ -15,7 +15,7 @@ class WikiLog
   listen_to :ban, :on_ban
   listen_to :quitting, :on_bot_quit
 
-  CATEGORY_TS = "%Y %m %d"
+  CATEGORY_TS = '%Y %m %d'
   attr_accessor :log_thread, :buffer, :buffer_mutex
 
   # @param [Chatbot::Client] bot
@@ -50,7 +50,7 @@ class WikiLog
 
 
   def update(in_thr=false)
-    Thread.kill(@log_thread) unless in_thr
+    @log_thread.kill unless in_thr
     update_logs
     @log_thread = make_thread
   end
