@@ -155,7 +155,7 @@ module Chatbot
     # Sends a message to chat
     # @param [String] text
     def send_msg(text)
-      post(:msgType => :chat, :text => text)
+      post(:msgType => :chat, :text => text, :name => @config['user'])
     end
 
     # Kicks a user from chat. Requires mod rights (or above)
