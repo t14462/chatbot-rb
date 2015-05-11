@@ -9,7 +9,6 @@ class Chatbot::AutoTube
   match /^yton$/, :method => :enable
   match /^ytoff$/, :method => :disable
 
-  YOUTUBE_API_KEY = ENV['YOUTUBE_API_KEY']
   # Thanks to Mark Seymour for the following regex!
   YOUTUBE_VIDEO_REGEXP = /https?:\/\/(?:[a-zA-Z]{2,3}\.)?(?:youtube\.com\/watch)(?:\?(?:[\w=-]+&(?:amp;)?)*v=([\w-]+)(?:&(?:amp;)?[\w=-]+)*)?(?:#[!]?(?:(?:(?:[\w=-]+&(?:amp;)?)*(?:v=([\w-]+))(?:&(?:amp;)?[\w=-]+)*)|(?:[\w=&-]+)))?[^\w-]?|https?:\/\/(?:[a-zA-Z]{2,3}\.)?(?:youtu\.be\/)([\w-]+)/i
   YOUTUBE_API_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=%s&key=%s"
@@ -28,7 +27,7 @@ class Chatbot::AutoTube
     # Also thanks to Mark Seymour for this code!
     return unless message.match(YOUTUBE_VIDEO_REGEXP)
     video_ids = message.scan(YOUTUBE_VIDEO_REGEXP).flatten.reject(&:'nil?').uniq
-    response = HTTParty.get(YOUTUBE_API_VIDEO_URL % [video_ids.join(','), YOUTUBE_API_KEY], headers: {'User-Agent' => "HTTParty/#{HTTParty::VERSION} #{RUBY_ENGINE}/#{RUBY_VERSION}"})
+    response = HTTParty.get(YOUTUBE_API_VIDEO_URL % [video_ids.join(','), @client.config['youtube_api_key']], headers: {'User-Agent' => "HTTParty/#{HTTParty::VERSION} #{RUBY_ENGINE}/#{RUBY_VERSION}"})
     videos = response['items']
     videos.each {|video|
       @client.send_msg "YouTube » %<title>s (%<length>s) · by %<uploader>s on %<uploaded>s · ☝%<likes>s - ☟%<dislikes>s · %<views>s views" % {
