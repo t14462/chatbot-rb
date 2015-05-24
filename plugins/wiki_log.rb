@@ -71,7 +71,7 @@ class WikiLog
       if page_content.empty? or @options[:type].eql? :overwrite
         text = "<pre class=\"ChatLog\">#{text}</pre>\n[[Category:#{@options[:category]}|#{Time.now.utc.strftime CATEGORY_TS}]]"
       else
-        text = page_content.gsub('</pre>', text + '</pre>')
+        text = page_content.gsub('</pre>', '').gsub("\n[[Category:#{@options[:category]}|", "#{text}</pre>\n[[Category:#{@options[:category]}|")
       end
     end
     @client.api.edit title, text, :bot => 1, :minor => 1, :summary => 'Updating chat logs'
