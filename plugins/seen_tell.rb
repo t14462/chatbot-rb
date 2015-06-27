@@ -7,8 +7,8 @@ class SeenTell
   match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
   match /^seen (.*)/, :method => :seen_user
-  match /^tellon ?(:.+)?/, :method => :enable_tell
-  match /^telloff ?(:.+)?/, :method => :disable_tell
+  match /^tellon/, :method => :enable_tell
+  match /^telloff/, :method => :disable_tell
   match /.*/, :method => :update_user, :use_prefix => false
   listen_to :join, :update_user
 
