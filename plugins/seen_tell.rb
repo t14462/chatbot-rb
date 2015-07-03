@@ -34,7 +34,7 @@ class SeenTell
 
   # @param [User] user
   def enable_tell(user)
-    if user.is? :admin and !@allow_tell
+    if user.is? :mod and !@allow_tell
       @allow_tell = true
       @client.send_msg user.name + ': !tell is now enabled'
     end
