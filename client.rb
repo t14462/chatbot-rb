@@ -169,5 +169,13 @@ module Chatbot
       @running = false
       post(:msgType => :command, :command => :logout)
     end
+    
+    # Bans a user from chat. Requires mod rights (or above)
+    # @param [String] user
+    # @param [Fixnum] length
+    # @param [String] reason
+    def ban(user, length, reason)
+      post(:msgType => :command, :command => :ban, :userToBan => user, :time => length, :reason => :reason)
+    end
   end
 end
