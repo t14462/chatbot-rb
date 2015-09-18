@@ -177,7 +177,7 @@ module Chatbot
     # @param [Fixnum] length
     # @param [String] reason
     def ban(user, length, reason)
-      post(:msgType => :command, :command => :ban, :userToBan => user, :time => length, :reason => :reason)
+      post(:msgType => :command, :command => :ban, :userToBan => user, :time => length, :reason => reason)
     end
   end
 end
