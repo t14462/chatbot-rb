@@ -43,6 +43,7 @@ module Chatbot
       @running = true
       fetch_chat_info
       @threads = []
+      @ping_thread = nil
       @plugins = []
       @handlers = {
           :message => [],
@@ -141,11 +142,12 @@ module Chatbot
       end
       @handlers[:quitting].each { |handler| handler.call(nil) }
       @threads.each { |thr| thr.join }
+      @ping_thread.kill unless @ping_thread.nil?
     end
 
     # Make a ping thread
     def ping_thr
-      Thread.new {
+      @ping_thread = Thread.new {
         sleep 24
         post(:ping)
         ping_thr
