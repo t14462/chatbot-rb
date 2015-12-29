@@ -34,6 +34,7 @@ class Chatbot::Admin
   end
 
   # @param [User] user
+  # @param [String] target
   def ignore(user, target)
     if user.is? :mod
       if @client.userlist.key? target
