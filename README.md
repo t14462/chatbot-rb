@@ -1,7 +1,7 @@
 chatbot-rb
 ==========
 
-A plugin-based bot framework in Ruby for [Wikia's](http://wikia.com/) [Special:Chat](https://github.com/Wikia/app/tree/dev/extensions/wikia/Chat2) extension.
+A plugin-based bot framework in Ruby for [Wikia's](http://wikia.com/) [Special:Chat](https://github.com/Wikia/app/tree/dev/extensions/wikia/Chat2) extension. Created by Sactage.
 
 Installation
 ============
