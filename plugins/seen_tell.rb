@@ -7,6 +7,7 @@ class SeenTell
   match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
   match /^untell (.*)/, :method => :untell
+  match /^told (.*)/, :method => :told
   match /^seen (.*)/, :method => :seen_user
   match /^tellon/, :method => :enable_tell
   match /^telloff/, :method => :disable_tell
@@ -64,9 +65,9 @@ class SeenTell
     end
     @tell_mutex.synchronize do
       if @tells.key? target.downcase
-        @tells[target.downcase][user.name] = message
+        @tells[target.downcase][user.name] = {:message => message, :delivered => false}
       else
-        @tells[target.downcase] = {user.name => message}
+        @tells[target.downcase] = {user.name => {:message => message, :delivered => false}}
       end
       File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       @client.send_msg "#{user.name}: I'll tell #{target} that the next time I see them."
@@ -91,6 +92,32 @@ class SeenTell
       File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       @client.send_msg "#{user.name}: I've deleted your message to #{target}."
     end
+  end
+
+  # @param [User] user
+  # @param [String] target
+  def told(user, target)
+    return unless @allow_tell
+    if target.downcase.eql? user.name.downcase
+      return @client.send_msg user.name + ': Really?'
+    elsif target.downcase.eql? @client.config['user'].downcase
+      return @client.send_msg user.name + ': >.>'
+    end
+    @tells_mutex.synchronize do
+      if @tells.key? target.downcase and @tells[target.downcase].key? user.name
+        if @tells[target.downcase][user.name].is_a? Hash # new format
+          if @tells[target.downcase][user.name][:delivered]
+            return @client.send_msg "#{user.name}: I delivered your message to #{target}!"
+          else
+            return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
+          end
+        elsif @tells[target.downcase][user.name].is_a? String
+          @tells[target.downcase][user.name] = {:message => @tells[target.downcase][user.name], :delivered => false}
+          File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
+          return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
+        end
+      end
+      @client.send_msg "#{user.name}: I've got no message from you for #{target}."
   end
 
   # @param [User] user
@@ -123,7 +150,7 @@ class SeenTell
   end
 
   def fix_tell_file
-    File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => 'baz'}}.merge(@tells).to_yaml)}
+    File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => {:message => 'baz', :delivered => false}}}.merge(@tells).to_yaml)}
   end
 
   def update_user(*args)
@@ -131,10 +158,15 @@ class SeenTell
       user = args[0]
       if !@tells.nil? and @tells.key? user.name.downcase
         @tell_mutex.synchronize do
-          @tells[user.name.downcase].each do |k, v|
-            @client.send_msg "#{user.name}, #{k} told you: #{v}"
+          @tells[user.name.downcase].select{|s, h| h.is_a?(String) or !h[:delivered]}.each do |sender, data|
+            if data.is_a? String
+              @tells[user.name.downcase][sender] = {:message => data, :delivered => true}
+              data = @tells[user.name.downcase][sender]
+            else
+              @tells[user.name.downcase][sender][:delivered] = true
+            end
+            @client.send_msg "#{user.name}, #{sender} told you: #{data[:message]}"
           end
-          @tells[user.name.downcase] = {}
           File.open('tells.yml', 'w+') {|f| f.write(@tells.to_yaml)}
         end
       elsif @tells.nil?
