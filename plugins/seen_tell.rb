@@ -6,6 +6,7 @@ class SeenTell
   match /^seenon/, :method => :enable_seen
   match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
+  match /^untell (.*)/, :method => :untell
   match /^seen (.*)/, :method => :seen_user
   match /^tellon/, :method => :enable_tell
   match /^telloff/, :method => :disable_tell
@@ -69,6 +70,26 @@ class SeenTell
       end
       File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       @client.send_msg "#{user.name}: I'll tell #{target} that the next time I see them."
+    end
+  end
+
+  # @param [User] user
+  # @param [String] target
+  def untell(user, target)
+    return unless @allow_tell
+    if target.downcase.eql? user.name.downcase
+      return @client.send_msg user.name + ': You can\'t untell yourself something!'
+    elsif target.downcase.eql? @client.config['user'].downcase
+      return @client.send_msg user.name + ': Thank you very little for the message </3'
+    end
+    @tell_mutex.synchronize do
+      if @tells.key? target.downcase and @tells[target.downcase].key? user.name
+        @tells[target.downcase].delete user.name
+      else
+        return @client.send_msg user.name + ": I couldn't find a message from you for #{target}!"
+      end
+      File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
+      @client.send_msg "#{user.name}: I've deleted your message to #{target}."
     end
   end
 
