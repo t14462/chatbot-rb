@@ -113,8 +113,8 @@ class SeenTell
           else
             return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
           end
-        elsif @tells[target.downcase][user.name].is_a? String
-          @tells[target.downcase][user.name] = {:message => @tells[target.downcase][user.name], :delivered => false, :time => nil}
+        elsif tell.is_a? String
+          @tells[target.downcase][user.name] = {:message => tell, :delivered => false, :time => nil}
           File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
           return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
         end
