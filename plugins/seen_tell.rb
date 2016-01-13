@@ -3,6 +3,7 @@ require_relative '../plugin'
 class SeenTell
   include Chatbot::Plugin
 
+  TS_FORMAT = '%F %T %Z'
   match /^seenon/, :method => :enable_seen
   match /^seenoff/, :method => :disable_seen
   match /^tell ([^ ]+) (.+)/, :method => :tell
@@ -65,9 +66,9 @@ class SeenTell
     end
     @tell_mutex.synchronize do
       if @tells.key? target.downcase
-        @tells[target.downcase][user.name] = {:message => message, :delivered => false}
+        @tells[target.downcase][user.name] = {:message => message, :delivered => false, :time => Time.now.utc}
       else
-        @tells[target.downcase] = {user.name => {:message => message, :delivered => false}}
+        @tells[target.downcase] = {user.name => {:message => message, :delivered => false, :time => Time.now.utc}}
       end
       File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
       @client.send_msg "#{user.name}: I'll tell #{target} that the next time I see them."
@@ -105,14 +106,15 @@ class SeenTell
     end
     @tells_mutex.synchronize do
       if @tells.key? target.downcase and @tells[target.downcase].key? user.name
-        if @tells[target.downcase][user.name].is_a? Hash # new format
-          if @tells[target.downcase][user.name][:delivered]
-            return @client.send_msg "#{user.name}: I delivered your message to #{target}!"
+        tell = @tells[target.downcase][user.name]
+        if tell.is_a? Hash # new format
+          if tell[:delivered]
+            return @client.send_msg "#{user.name}: I delivered your message to #{target} on #{tell[:time].strftime(TS_FORMAT)}!"
           else
             return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
           end
         elsif @tells[target.downcase][user.name].is_a? String
-          @tells[target.downcase][user.name] = {:message => @tells[target.downcase][user.name], :delivered => false}
+          @tells[target.downcase][user.name] = {:message => @tells[target.downcase][user.name], :delivered => false, :time => nil}
           File.open('tells.yml', File::WRONLY) {|f| f.write(@tells.to_yaml)}
           return @client.send_msg "#{user.name}: I haven't been able to deliver your message to #{target} yet."
         end
@@ -150,7 +152,7 @@ class SeenTell
   end
 
   def fix_tell_file
-    File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => {:message => 'baz', :delivered => false}}}.merge(@tells).to_yaml)}
+    File.open('tells.yml', 'w+') {|f| f.write({'foo' => {'bar' => {:message => 'baz', :delivered => false, :time => Time.now.utc}}}.merge(@tells).to_yaml)}
   end
 
   def update_user(*args)
@@ -160,12 +162,17 @@ class SeenTell
         @tell_mutex.synchronize do
           @tells[user.name.downcase].select{|s, h| h.is_a?(String) or !h[:delivered]}.each do |sender, data|
             if data.is_a? String
-              @tells[user.name.downcase][sender] = {:message => data, :delivered => true}
+              @tells[user.name.downcase][sender] = {:message => data, :delivered => true, :time => nil}
               data = @tells[user.name.downcase][sender]
             else
               @tells[user.name.downcase][sender][:delivered] = true
             end
-            @client.send_msg "#{user.name}, #{sender} told you: #{data[:message]}"
+            if @data[:time].nil?
+              @client.send_msg "#{user.name}, #{sender} wanted to tell you: #{data[:message]}"
+            else
+              @client.send_msg "#{user.name}, #{sender} wanted to tell you @ #{data[:time].strftime(TS_FORMAT)}: #{data[:message]}"
+            end
+            @tells[user.name.downcase][sender][:time] = Time.now.utc
           end
           File.open('tells.yml', 'w+') {|f| f.write(@tells.to_yaml)}
         end
