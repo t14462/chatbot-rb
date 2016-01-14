@@ -51,6 +51,7 @@ module Chatbot
         # @type [User] user
         |message, user|
           begin
+            next if user.nil?
             if matcher.use_prefix
               next unless message[0] == matcher.prefix
               message = message[1..-1]
