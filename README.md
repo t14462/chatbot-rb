@@ -11,10 +11,28 @@ To run a bot using this framework, Ruby 2.1+ is expected. I develop on the lates
 
 This framework requires [HTTParty](https://rubygems.org/gems/httparty) and [mediawiki-gateway](https://rubygems.org/gems/mediawiki-gateway). You can install them both with `[sudo] gem install httparty mediawiki-gateway`.
 
+Some of the included plugins may also have dependencies - they will be listed in the plugins section of this readme.
+
 Running
 =======
-Please follow the format outlined in `main.sample.rb` and `config.sample.yml` to setup a working bot. The Wikia account used to connect to chat will not *need* bot rights, but if you're using a logging plugin or otherwise editing it will be useful.
+Please follow the format outlined in `main.sample.rb` and `config.sample.yml` to setup a working bot. The Wikia account used to connect to chat will not *need* bot rights, but if you're using the `wiki_log` plugin or making edits on-wiki it will be useful.
 
 Plugins
 =======
-The plugin system for this bot is **heavily** inspired by that of [Cinch](https://github.com/cinchrb/cinch), albeit very watered down and less useful. See the example plugins for ideas on how to make your own.
+The plugin system for this bot is **heavily** inspired by that of [Cinch](https://github.com/cinchrb/cinch), albeit very watered down.
+
+The following plugins are included in the repository. You may use them if you wish or create your own.
+
+Commands followed by `[M]` require chat moderator rights (or above), and those followed by `[A]` require administrator rights.
+
+## `admin`
+Used for administration of the bot.
+
+**Included commands:**
+- **!quit** `[A]`: Makes the bot quit from chat.
+- **!plugins**: Lists all of the plugins currently loaded.
+- **!ignore <user>** `[M]`: Adds the specified user to the ignore list.
+- **!unignore <user>** `[M]`: Removes the specified user from the ignore list.
+- **!commands**: Lists all of the commands registered with the bot. Note that they are displayed as the regular expression patterns passed to `match` in the plugin file.
+- **!source**, **!src**, **!git**, **!github**: Provides a link to the master repository for the bot framework.
+
