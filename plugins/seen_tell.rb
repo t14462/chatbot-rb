@@ -120,6 +120,7 @@ class SeenTell
         end
       end
       @client.send_msg "#{user.name}: I've got no message from you for #{target}."
+    end
   end
 
   # @param [User] user
