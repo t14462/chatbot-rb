@@ -168,7 +168,7 @@ class SeenTell
             else
               @tells[user.name.downcase][sender][:delivered] = true
             end
-            if @data[:time].nil?
+            if data[:time].nil?
               @client.send_msg "#{user.name}, #{sender} wanted to tell you: #{data[:message]}"
             else
               @client.send_msg "#{user.name}, #{sender} wanted to tell you @ #{data[:time].strftime(TS_FORMAT)}: #{data[:message]}"
