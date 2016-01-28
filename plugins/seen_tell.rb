@@ -104,7 +104,7 @@ class SeenTell
     elsif target.downcase.eql? @client.config['user'].downcase
       return @client.send_msg user.name + ': >.>'
     end
-    @tells_mutex.synchronize do
+    @tell_mutex.synchronize do
       if @tells.key? target.downcase and @tells[target.downcase].key? user.name
         tell = @tells[target.downcase][user.name]
         if tell.is_a? Hash # new format
