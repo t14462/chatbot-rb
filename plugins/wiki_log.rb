@@ -96,8 +96,8 @@ class WikiLog
         
         # Dirty GC
         while (text.scan(/(\|\.+\|666\|. .+)\1/im).size > 0 or text.gsub(/(\|\.+\|666\|)(.)( .+)\1.\3\1\2\3/im).size > 0) do
-          text = text.gsub(/(\|\.+\|666\|. .+)\1/im, '\n\1')
-          text = text.gsub(/(\|\.+\|666\|)(.)( .+)\1.\3\1\2\3/im, '\n\1\2\3')
+          text = text.gsub(/(\|\.+\|666\|. .+)\1/im, '\1')
+          text = text.gsub(/(\|\.+\|666\|)(.)( .+)\1.\3\1\2\3/im, '\1\2\3')
         end
       end
  
