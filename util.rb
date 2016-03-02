@@ -90,7 +90,7 @@ class User
 end
 
 module Util
-  LOG_TS_FORMAT = '[%Y-%m-%d %H:%M:%S]'
+  LOG_TS_FORMAT = '%H:%M:%S'
 
   # @return [String] Log timestamp string of current time
   def self.ts
