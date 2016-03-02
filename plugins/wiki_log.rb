@@ -74,7 +74,9 @@ class WikiLog
     title = Time.now.utc.strftime @options[:title]
     text = @buffer.dup.gsub('<', '&lt;').gsub('>', '&gt;') # Ideally, this is inside a buffer lock somewhere...
     @buffer = ''
-    text = text.gsub('[', '&#91;').gsub(']', '&#93;').gsub('{', '&#123;').gsub('}', '&#125;').gsub('=', '&#61;')
+    text = text.gsub('[', '&#91;').gsub(']', '&#93;')
+    text = text.gsub('{', '&#123;').gsub('}', '&#125;')
+    text = text.gsub('=', '&#61;')
     page_content = get_page_contents(title)
     if @options[:type].eql? :fifo
       if page_content.scan(/\n/).size >= @options[:fifo_threshold]
@@ -93,8 +95,10 @@ class WikiLog
         text = text.gsub("\n}}{{#invoke:S44|chatlog", '')
         
         # Dirty GC
-        text = text.gsub(/(\n\|\.*\|999\|.+)\1/, '\n\1')
-        text = text.gsub(/(\n\|\.*\|999\|)(.)(.+)\1.\3\1\2\3/, '\n\1\2\3')
+        while (text.scan(/(\n\|\.*\|999\|. .+)\1/i).size > 0 or text.gsub(/(\n\|\.*\|999\|)(.)( .+)\1.\3\1\2\3/i).size > 0) do
+          text = text.gsub(/(\n\|\.*\|999\|. .+)\1/i, '\n\1')
+          text = text.gsub(/(\n\|\.*\|999\|)(.)( .+)\1.\3\1\2\3/i, '\n\1\2\3')
+        end
       end
  
  
@@ -155,14 +159,14 @@ class WikiLog
   # @param [Hash] data
   def on_part(data)
     @buffer_mutex.synchronize do
-      @buffer << "\n|........|666|⇦#{data['attrs']['name']}|"
+      @buffer << "\n|........|666|⇦ #{data['attrs']['name']}|"
     end
   end
  
   # @param [Hash] data
   def on_join(data)
     @buffer_mutex.synchronize do
-      @buffer << "\n|........|666|➡#{data['attrs']['name']}|"
+      @buffer << "\n|........|666|➡ #{data['attrs']['name']}|"
     end
   end
  
