@@ -74,7 +74,7 @@ class WikiLog
     title = Time.now.utc.strftime @options[:title]
     text = @buffer.dup.gsub('<', '&lt;').gsub('>', '&gt;') # Ideally, this is inside a buffer lock somewhere...
     @buffer = ''
-    text = text.gsub('[', '&#91;').gsub(']', '&#93;').gsub('{', '&#123;').gsub('}', '&#125;')
+    text = text.gsub('[', '&#91;').gsub(']', '&#93;').gsub('{', '&#123;').gsub('}', '&#125;').gsub('=', '&#61;')
     page_content = get_page_contents(title)
     if @options[:type].eql? :fifo
       if page_content.scan(/\n/).size >= @options[:fifo_threshold]
