@@ -95,7 +95,7 @@ class WikiLog
         text = text.gsub("\n}}{{#invoke:S44|chatlog", '')
         
         # Dirty GC
-        while (text.scan(/(\|\.+\|666\|. .+)\1/im).size > 0 or text.gsub(/(\|\.+\|666\|)(.)( .+)\1.\3\1\2\3/im).size > 0) do
+        for i in 0..5
           text = text.gsub(/(\|\.+\|666\|. .+)\1/im, '\1')
           text = text.gsub(/(\|\.+\|666\|)(.)( .+)\1.\3\1\2\3/im, '\1\2\3')
         end
