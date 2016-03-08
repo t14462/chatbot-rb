@@ -5,8 +5,8 @@ class Chatbot::DiskLog
   include Chatbot::Plugin
 
   match /(.*)/, :method => :log_message, :use_prefix => false
-  listen_to :join, :log_join
-  listen_to :part, :log_part
+  # listen_to :join, :log_join
+  # listen_to :part, :log_part
   listen_to :kick, :log_kick
   listen_to :ban, :log_ban
 
