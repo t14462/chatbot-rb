@@ -79,6 +79,7 @@ class SeenTell
   # @param [String] target
   def untell(user, target)
     return unless @allow_tell
+    target.gsub!(/_/, ' ')
     if target.downcase.eql? user.name.downcase
       return @client.send_msg user.name + ': You can\'t untell yourself something!'
     elsif target.downcase.eql? @client.config['user'].downcase
