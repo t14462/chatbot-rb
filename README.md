@@ -1,7 +1,7 @@
 chatbot-rb
 ==========
 
-A plugin-based bot framework in Ruby for [Wikia's](http://wikia.com/) [Special:Chat](https://github.com/Wikia/app/tree/dev/extensions/wikia/Chat2) extension.
+A plugin-based bot framework in Ruby for [Wikia's](http://wikia.com/) [Special:Chat](https://github.com/Wikia/app/tree/dev/extensions/wikia/Chat2) extension. Created by Sactage.
 
 Installation
 ============
@@ -18,3 +18,7 @@ Please follow the format outlined in `main.sample.rb` and `config.sample.yml` to
 Plugins
 =======
 The plugin system for this bot is **heavily** inspired by that of [Cinch](https://github.com/cinchrb/cinch), albeit very watered down and less useful. See the example plugins for ideas on how to make your own.
+
+Youtube
+------
+The Auto_tube plugin requires the `iso8601` gem, and a Youtube API key - see [Youtube Data API](https://developers.google.com/youtube/v3/getting-started).
