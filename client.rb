@@ -6,7 +6,7 @@ require_relative './util'
 require_relative './events'
 
 $logger = Logger.new(STDERR)
-$logger.level = Logger::DEBUG
+$logger.level = Logger::WARN
 
 module Chatbot
   # An HTTP client capable of connecting to Wikia's Special:Chat product.
@@ -81,17 +81,24 @@ module Chatbot
       data = JSON.parse(res.body, :symbolize_names => true)
       $logger.debug data
       @key = data[:chatkey]
-      @server = data[:chatServerHost]
       @room = data[:roomId]
       @mod = data[:isChatMod]
       @initialized = false
+      @server = JSON.parse(
+        HTTParty.get(
+          @base_url +
+          '/api.php?action=query&meta=siteinfo&siprop=wikidesc&format=json'
+        ).body,
+        :symbolize_names => true
+      )[:query][:wikidesc][:id] # >.>
       @request_options = {
           :name => @config['user'],
           :EIO => 2,
           :transport => 'polling',
           :key => @key,
           :roomId => @room,
-          :serverId => @server
+          :serverId => @server,
+          :wikiId => @server
       }
       if @config.key?('dev')
         self.class.base_uri "http://#{data[:chatServerHost]}:#{data[:chatServerPort]}/"
