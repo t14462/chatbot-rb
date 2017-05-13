@@ -14,7 +14,7 @@ module Chatbot
     include HTTParty
     include Events
 
-    USER_AGENT = 'sactage/chatbot-rb v2.1.0 (fyi socket.io sucks) [http://github.com/sactage/chatbot-rb]'
+    USER_AGENT = 'sactage/chatbot-rb v2.2.0 (fyi socket.io sucks) [http://github.com/sactage/chatbot-rb]'
     CONFIG_FILE = 'config.yml'
 
     attr_accessor :session, :clientid, :handlers, :config, :userlist, :api, :threads
@@ -25,6 +25,7 @@ module Chatbot
         $logger.fatal "Config: #{CONFIG_FILE} not found!"
         exit
       end
+      $logger.debug 'init'
       @config = YAML.load_file(File.join(__dir__, CONFIG_FILE))
       @base_url = @config.key?('dev') ? 'http://localhost:8080' : "http://#{@config['wiki']}.wikia.com"
       @api = MediaWiki::Gateway.new @base_url + '/api.php'
@@ -73,29 +74,39 @@ module Chatbot
 
     # Fetch important data from chat
     def fetch_chat_info
+      $logger.debug 'fetch_chat_info'
       # @type [HTTParty::Response]
       res = HTTParty.get("#{@base_url}/wikia.php?controller=Chat&format=json", :headers => @headers)
       # @type [Hash]
       data = JSON.parse(res.body, :symbolize_names => true)
+      $logger.debug data
       @key = data[:chatkey]
-      @server = data[:nodeInstance]
       @room = data[:roomId]
       @mod = data[:isChatMod]
       @initialized = false
+      @server = JSON.parse(
+        HTTParty.get(
+          @base_url +
+          '/api.php?action=query&meta=siteinfo&siprop=wikidesc&format=json'
+        ).body,
+        :symbolize_names => true
+      )[:query][:wikidesc][:id] # >.>
       @request_options = {
           :name => @config['user'],
           :EIO => 2,
           :transport => 'polling',
           :key => @key,
           :roomId => @room,
-          :serverId => @server
+          :serverId => @server,
+          :wikiId => @server
       }
       if @config.key?('dev')
-        self.class.base_uri "http://#{data[:nodeHostname]}:#{data[:nodePort]}/"
+        self.class.base_uri "http://#{data[:chatServerHost]}:#{data[:chatServerPort]}/"
       else
-        self.class.base_uri "http://#{data[:nodeHostname]}/"
+        self.class.base_uri "http://#{data[:chatServerHost]}/"
       end
       res = get
+      $logger.debug res
       @request_options[:sid] = JSON.parse(res.body[5, res.body.size-1], :symbolize_names => true)[:sid]
       @headers['Cookie'] = res.headers['set-cookie']
     end
@@ -111,6 +122,7 @@ module Chatbot
     # Perform a POST request to the chat server with the specified body
     # @param [Hash] body
     def post(body)
+      $logger.debug body.to_json
       body = Util::format_message(body == :ping ? '2' : '42' + ["message", {:id => nil, :attrs => body}.to_json].to_json)
       opts = @request_options.merge({:time_cachebuster => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
       @time_cachebuster += 1
@@ -123,6 +135,7 @@ module Chatbot
         begin
           res = get
           body = res.body
+          $logger.debug body
           spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
           if spl.nil? and body.include? 'Session ID unknown'
             @running = false
@@ -171,7 +184,7 @@ module Chatbot
       @running = false
       post(:msgType => :command, :command => :logout)
     end
-    
+
     # Bans a user from chat. Requires mod rights (or above)
     # @param [String] user
     # @param [Fixnum] length

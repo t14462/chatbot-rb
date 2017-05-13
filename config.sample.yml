@@ -2,3 +2,9 @@
 user: Username Here
 password: pa55w0rd h3r3
 wiki: communitytest (replace this with your wiki's URL, e.g. The My Little Pony wiki at http://mlp.wikia.com would have 'mlp' here)
+:wikilog:
+  :log_interval: 720
+  :title: Project:Chat/Logs/KJFG LogJam %Y %d%b (you can use your own format and your own path on wikia)
+  :type: :s44 (for LUA)
+  :fifo_threshold: 5000
+  :category: Wikia Chat logs

@@ -8,6 +8,7 @@ module Chatbot
     def on_socket_message(msg)
       begin
         # @type [Hash]
+        $logger.debug msg
         json = JSON.parse(msg)[1]
         if json['event'] == 'disableReconnect' or json['event'] == 'forceReconnect' or !json.key? 'data'
           quit
@@ -50,7 +51,7 @@ module Chatbot
       ping_thr
       data['collections']['users']['models'].each do |user|
         attrs = user['attrs']
-        @userlist[attrs['name']] = User.new(attrs['name'], attrs['isModerator'], attrs['isCanGiveChatMod'], attrs['isStaff'])
+        @userlist[attrs['name']] = User.new(attrs['name'], attrs['isModerator'], attrs['canPromoteModerator'], attrs['isStaff'])
       end
       @initialized = true
     end
@@ -61,7 +62,7 @@ module Chatbot
         post(:msgType => :command, :command => :initquery)
       end
       @userlist_mutex.synchronize do
-        @userlist[data['attrs']['name']] = User.new(data['attrs']['name'], data['attrs']['isModerator'], data['attrs']['isCanGiveChatMod'], data['attrs']['isStaff'])
+        @userlist[data['attrs']['name']] = User.new(data['attrs']['name'], data['attrs']['isModerator'], data['attrs']['canPromoteModerator'], data['attrs']['isStaff'])
       end
     end
 

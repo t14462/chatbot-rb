@@ -1,0 +1,15 @@
+[Unit]
+Description=Chat logger for ru.elderscrolls wikia
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/chatbot
+PIDFile=/opt/chatbot/service.pid
+
+ExecStart=/usr/bin/ruby -C /opt/chatbot main.rb
+ExecStop=/usr/bin/pkill -f ruby
+ExecReload=/usr/bin/pkill -f ruby && /usr/bin/ruby -C /opt/chatbot main.rb
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
