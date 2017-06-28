@@ -97,19 +97,12 @@ module Util
     Time.now.utc.strftime LOG_TS_FORMAT
   end
 
-  # Transform a Fixnum into a +stupid+ format
-  # @param [Fixnum] num
-  # @return [String]
-  def self.int_to_stupid(num)
-    "\x00" + num.to_s.scan(/\d/).collect{|d|d.to_i.chr}.join('') + "\xFF"
-  end
-
   # Format the given string into a socket.io-readable format
   # @param [String] message
   # @return [String]
   def self.format_message(message)
     message = message.force_encoding('ASCII-8BIT')
-    int_to_stupid(message.size) + message
+    message.size.to_s + ':' + message
   end
 end
 

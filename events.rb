@@ -31,10 +31,6 @@ module Chatbot
       end
     end
 
-    def on_socket_ping
-      post('8::')
-    end
-
     # @param [Hash] data
     def on_chat_message(data)
       begin

@@ -93,21 +93,25 @@ module Chatbot
       )[:query][:wikidesc][:id] # >.>
       @request_options = {
           :name => @config['user'],
-          :EIO => 2,
+          :EIO => 3,
           :transport => 'polling',
           :key => @key,
           :roomId => @room,
-          :serverId => @server,
-          :wikiId => @server
+          :serverId => @server
       }
+      p @request_options
       if @config.key?('dev')
         self.class.base_uri "http://#{data[:chatServerHost]}:#{data[:chatServerPort]}/"
       else
         self.class.base_uri "http://#{data[:chatServerHost]}/"
       end
       res = get
-      $logger.debug res
-      @request_options[:sid] = JSON.parse(res.body[5, res.body.size-1], :symbolize_names => true)[:sid]
+      spl = res.match(/\d+:0(.*)$/)
+      if spl.nil?
+        @running = false
+        return
+      end
+      @request_options[:sid] = JSON.parse(spl.captures[0], :symbolize_names => true)[:sid]
       @headers['Cookie'] = res.headers['set-cookie']
     end
 
@@ -124,7 +128,7 @@ module Chatbot
     def post(body)
       $logger.debug body.to_json
       body = Util::format_message(body == :ping ? '2' : '42' + ["message", {:id => nil, :attrs => body}.to_json].to_json)
-      opts = @request_options.merge({:time_cachebuster => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
+      opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
       @time_cachebuster += 1
       self.class.post('/socket.io/', :query => opts, :body => body, :headers => @headers)
     end
@@ -136,17 +140,16 @@ module Chatbot
           res = get
           body = res.body
           $logger.debug body
-          spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
+          spl = body.match(/\d+:42(.*)$/)
           if spl.nil? and body.include? 'Session ID unknown'
             @running = false
             break
           end
-          spl = body.match(/(?:\x00.+?#{255.chr}(.+?))+$/)
           next unless spl
           spl.captures.each do |message|
             @threads << Thread.new(message) {
-              on_socket_message(message.gsub(/^42/, ''))
-            } if message.match(/^42/)
+              on_socket_message(message)
+            }
           end
         rescue => e
           $logger.fatal e
@@ -161,7 +164,7 @@ module Chatbot
     # Make a ping thread
     def ping_thr
       @ping_thread = Thread.new {
-        sleep 24
+        sleep 15
         post(:ping)
         ping_thr
       }
