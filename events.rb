@@ -14,7 +14,9 @@ module Chatbot
           quit
           return
         end
-        json['data'] = JSON.parse(json['data'])
+        if json['data'].is_a? String
+          json['data'] = JSON.parse(json['data'])
+        end
         if json['event'] == 'chat:add' and not json['data']['id'].nil?
           json['event'] = 'message'
         elsif json['event'] == 'updateUser'
@@ -29,10 +31,6 @@ module Chatbot
       rescue => e
         $logger.fatal e
       end
-    end
-
-    def on_socket_ping
-      post('8::')
     end
 
     # @param [Hash] data
