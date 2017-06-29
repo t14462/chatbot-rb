@@ -25,7 +25,6 @@ module Chatbot
         $logger.fatal "Config: #{CONFIG_FILE} not found!"
         exit
       end
-      $logger.debug 'init'
       @config = YAML.load_file(File.join(__dir__, CONFIG_FILE))
       @base_url = @config.key?('dev') ? 'http://localhost:8080' : "http://#{@config['wiki']}.wikia.com"
       @api = MediaWiki::Gateway.new @base_url + '/api.php'
@@ -34,10 +33,10 @@ module Chatbot
       @headers = {
           'User-Agent' => USER_AGENT,
           'Cookie' => @api.cookies.map { |k, v| "#{k}=#{v};" }.join(' '),
-          'Content-Type' => 'application/octet-stream',
+          'Content-Type' => 'text/plain;charset=UTF-8',
           'Accept' => '*/*',
-          'Pragma' => 'no-cache',
-          'Cache-Control' => 'no-cache'
+          'Cache-Control' => 'no-cache',
+          'Pragma' => 'no-cache'
       }
       @userlist = {}
       @userlist_mutex = Mutex.new
@@ -74,12 +73,10 @@ module Chatbot
 
     # Fetch important data from chat
     def fetch_chat_info
-      $logger.debug 'fetch_chat_info'
       # @type [HTTParty::Response]
       res = HTTParty.get("#{@base_url}/wikia.php?controller=Chat&format=json", :headers => @headers)
       # @type [Hash]
       data = JSON.parse(res.body, :symbolize_names => true)
-      $logger.debug data
       @key = data[:chatkey]
       @room = data[:roomId]
       @mod = data[:isChatMod]
@@ -93,13 +90,12 @@ module Chatbot
       )[:query][:wikidesc][:id] # >.>
       @request_options = {
           :name => @config['user'],
-          :EIO => 3,
+          :EIO => 2,
           :transport => 'polling',
           :key => @key,
           :roomId => @room,
           :serverId => @server
       }
-      p @request_options
       if @config.key?('dev')
         self.class.base_uri "http://#{data[:chatServerHost]}:#{data[:chatServerPort]}/"
       else
@@ -126,7 +122,6 @@ module Chatbot
     # Perform a POST request to the chat server with the specified body
     # @param [Hash] body
     def post(body)
-      $logger.debug body.to_json
       body = Util::format_message(body == :ping ? '2' : '42' + ["message", {:id => nil, :attrs => body}.to_json].to_json)
       opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
       @time_cachebuster += 1
@@ -139,7 +134,6 @@ module Chatbot
         begin
           res = get
           body = res.body
-          $logger.debug body
           spl = body.match(/\d+:42(.*)$/)
           if spl.nil? and body.include? 'Session ID unknown'
             @running = false

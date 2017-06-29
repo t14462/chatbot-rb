@@ -8,13 +8,14 @@ module Chatbot
     def on_socket_message(msg)
       begin
         # @type [Hash]
-        $logger.debug msg
         json = JSON.parse(msg)[1]
         if json['event'] == 'disableReconnect' or json['event'] == 'forceReconnect' or !json.key? 'data'
           quit
           return
         end
-        json['data'] = JSON.parse(json['data'])
+        if json['data'].is_a? String
+          json['data'] = JSON.parse(json['data'])
+        end
         if json['event'] == 'chat:add' and not json['data']['id'].nil?
           json['event'] = 'message'
         elsif json['event'] == 'updateUser'
