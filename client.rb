@@ -125,8 +125,9 @@ module Chatbot
     # Perform a POST request to the chat server with the specified body
     # @param [Hash] body
     def post(body)
+      $logger.debug body.to_json
       body = Util::format_message(body == :ping ? '2' : '42' + ["message", {:id => nil, :attrs => body}.to_json].to_json)
-      opts = @request_options.merge({:t => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
+      opts = @request_options.merge({:time_cachebuster => Time.now.to_ms.to_s + '-' + @time_cachebuster.to_s})
       @time_cachebuster += 1
       self.class.post('/socket.io/', :query => opts, :body => body, :headers => @headers)
     end
