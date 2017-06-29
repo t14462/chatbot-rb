@@ -25,6 +25,7 @@ module Chatbot
         $logger.fatal "Config: #{CONFIG_FILE} not found!"
         exit
       end
+      $logger.debug 'init'
       @config = YAML.load_file(File.join(__dir__, CONFIG_FILE))
       @base_url = @config.key?('dev') ? 'http://localhost:8080' : "http://#{@config['wiki']}.wikia.com"
       @api = MediaWiki::Gateway.new @base_url + '/api.php'
@@ -35,8 +36,8 @@ module Chatbot
           'Cookie' => @api.cookies.map { |k, v| "#{k}=#{v};" }.join(' '),
           'Content-Type' => 'text/plain;charset=UTF-8',
           'Accept' => '*/*',
-          'Cache-Control' => 'no-cache',
-          'Pragma' => 'no-cache'
+          'Pragma' => 'no-cache',
+          'Cache-Control' => 'no-cache'
       }
       @userlist = {}
       @userlist_mutex = Mutex.new
@@ -73,6 +74,7 @@ module Chatbot
 
     # Fetch important data from chat
     def fetch_chat_info
+      $logger.debug 'fetch_chat_info'
       # @type [HTTParty::Response]
       res = HTTParty.get("#{@base_url}/wikia.php?controller=Chat&format=json", :headers => @headers)
       # @type [Hash]
@@ -102,6 +104,7 @@ module Chatbot
         self.class.base_uri "http://#{data[:chatServerHost]}/"
       end
       res = get
+      $logger.debug res
       spl = res.match(/\d+:0(.*)$/)
       if spl.nil?
         @running = false
@@ -134,6 +137,7 @@ module Chatbot
         begin
           res = get
           body = res.body
+          $logger.debug body
           spl = body.match(/\d+:42(.*)$/)
           if spl.nil? and body.include? 'Session ID unknown'
             @running = false
