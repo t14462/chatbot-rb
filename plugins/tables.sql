@@ -8,3 +8,6 @@ CREATE TABLE logs (
     target VARCHAR(255),
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT
 ) CHARACTER SET utf8;
+
+CREATE INDEX user_name ON logs (user);
+CREATE INDEX event_type ON logs (event);
