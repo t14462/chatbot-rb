@@ -3,7 +3,7 @@ require_relative '../plugin'
 class Chatbot::Filters
   include Chatbot::Plugin
 
-  match /^!.*|^AJ.*/, :method => :abusecontrol, :use_prefix => false # /
+  match /^!.*|^Kixtech.*|^team|^команда/, :method => :abusecontrol, :use_prefix => false # /
   match /(.*)/, :method => :filtercontrol, :use_prefix => false
   
   
@@ -20,8 +20,7 @@ class Chatbot::Filters
 	  cleanstart
     }
   end
-  
-  def capsstart
+    def capsstart
     Thread.new {
 	  @caps = {}
 	  sleep 150
@@ -35,8 +34,8 @@ class Chatbot::Filters
 	end
 	if @abuse.key?(user.name) then
 	  @abuse[user.name] = @abuse[user.name] + 1
-	  if @abuse[user.name] == 3 then
-	    @client.send_msg "#{user.name}, вы слишком часто использовали бота. Теперь он будет игнорировать вас. Чтобы снять игнор - обратитесь к модератору\/администратору."
+	  if @abuse[user.name] > 9 then
+	    @client.send_msg "#{user.name},\nБот на кота обиделся\n и 9 жизней исчерпал..."
 	    @abuse[user.name] = 0
 		if @client.userlist.key? user.name
           @client.userlist[user.name].ignore
@@ -51,24 +50,24 @@ class Chatbot::Filters
   
   def filtercontrol(user, message)
 	s = message.size
-	if s > 10 then
+	if s > 88 then
 	  message = message.gsub(/(%[A-Za-z0-9]{2}|[^A-ZА-Яa-zа-я0-9_])/, '')
 	  s = message.size
 	  u = message.count("A-ZА-Я")
 	  res = (u.to_f / s.to_f) * 100
-	  if res >= 70 then
-		@client.send_msg "#{user.name}, пожалуста, не капсите (процент капса в вашей строке: #{res.floor}%)"
+	  if res >= 72 then
+		@client.send_msg "#{user.name}, [[Project:Правила_чата#Злоупотребление форматированием|КАПС]] #{res.floor}%"
 		if !@caps.key?(user.name) then
 		  @caps[user.name] = 1
 		else
 		  @caps[user.name] = @caps[user.name] + 1
-		  if @caps[user.name] == 3 then
+		  if @caps[user.name] > 4 then
 		    @caps[user.name] = 0
 		    if $data['config']['modules']['moder'] then
 			  if user.is? :mod then
-			    @client.send_msg "#{user.name}, ай-ай-ай. Следящий за порядком в чате капсит уже третий раз подряд. Не стыдно?"
+			    @client.send_msg "#{user.name}, Капсь в личку."
 			  else
-		        @client.send_msg "#{user.name}, это уже третий раз, когда вы использовали капс. Всего хорошего!"
+		        @client.send_msg "#{user.name}, использование капса больше трёх раз — это уже слишком!"
 			    @client.kick "#{user.name}"
 			  end
 		    end 
