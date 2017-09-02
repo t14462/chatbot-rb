@@ -30,7 +30,7 @@ class Chatbot::AutoTube
     response = HTTParty.get(YOUTUBE_API_VIDEO_URL % [video_ids.join(','), @client.config['youtube_api_key']], headers: {'User-Agent' => "HTTParty/#{HTTParty::VERSION} #{RUBY_ENGINE}/#{RUBY_VERSION}"})
     videos = response['items']
     videos.each {|video|
-      @client.send_msg "YouTube » %<title>s (%<length>s) · by %<uploader>s on %<uploaded>s · ☝%<likes>s - ☟%<dislikes>s · %<views>s views" % {
+      @client.send_msg(("YouTube » %<title>s (%<length>s) · by %<uploader>s on %<uploaded>s · ☝%<likes>s - ☟%<dislikes>s · %<views>s views" % {
           title: video['snippet']['title'],
           uploader: video['snippet']['channelTitle'],
           uploaded: Time.parse(video['snippet']['publishedAt']).strftime('%F'),
@@ -38,7 +38,8 @@ class Chatbot::AutoTube
           likes: commify_numbers(video['statistics']['likeCount'].to_i),
           dislikes: commify_numbers(video['statistics']['dislikeCount'].to_i),
           views: commify_numbers(video['statistics']['viewCount'].to_i)
-      }
+      }).chars.collect{|c|"&#x#{c.ord.to_s(16)};"}.join)
+
     }
   end
 

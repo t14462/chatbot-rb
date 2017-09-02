@@ -101,7 +101,6 @@ module Util
   # @param [String] message
   # @return [String]
   def self.format_message(message)
-    message = message.force_encoding('ASCII-8BIT')
     message.size.to_s + ':' + message
   end
 end
