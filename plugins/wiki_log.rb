@@ -7,8 +7,8 @@ require_relative '../COLORS'
 class WikiLog
   include Chatbot::Plugin
  
-  match /^updatelogs$/, :method => :update_logs_command
-  match /^logs$/, :method => :logs_command
+  match /^updatelogs$|^UL$/, :method => :update_logs_command
+  match /^logs$|^L$/, :method => :logs_command
   match /^updated$/, :method => :updated_command
   match /(.*)/, :method => :on_message, :use_prefix => false
  
