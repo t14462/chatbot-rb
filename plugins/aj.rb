@@ -29,13 +29,14 @@ class Chatbot::Filters
   end
   
   def abusecontrol(user)
-    if !$data['config']['modules']['abuse'] or user.is?(:mod) then
+    #if !$data['config']['modules']['abuse'] or user.is?(:mod) then
+    if user.is?(:mod) then
 	  return
 	end
 	if @abuse.key?(user.name) then
 	  @abuse[user.name] = @abuse[user.name] + 1
 	  if @abuse[user.name] > 9 then
-	    @client.send_msg "#{user.name},\nБот на кота обиделся\n и 9 жизней исчерпал..."
+	    @client.send_msg "#{user.name},\nБот на кота обиделся\nи 9 жизней исчерпал..."
 	    @abuse[user.name] = 0
 		if @client.userlist.key? user.name
           @client.userlist[user.name].ignore
@@ -61,16 +62,18 @@ class Chatbot::Filters
 		  @caps[user.name] = 1
 		else
 		  @caps[user.name] = @caps[user.name] + 1
-		  if @caps[user.name] > 4 then
+		  if @caps[user.name] > 3 then
 		    @caps[user.name] = 0
-		    if $data['config']['modules']['moder'] then
+		    #if $data['config']['modules']['moder'] then
 			  if user.is? :mod then
-			    @client.send_msg "#{user.name}, Капсь в личку."
+			    #@client.send_msg "#{user.name}, Капсь в личку."
+			    @client.send_msg "Капсь в личку, RETARD!!!"
 			  else
-		        @client.send_msg "#{user.name}, использование капса больше трёх раз — это уже слишком!"
+		        #@client.send_msg "#{user.name}, использование капса больше трёх раз — это уже слишком!"
+		        @client.send_msg "Использование капса больше трёх раз — это уже слишком!"
 			    @client.kick "#{user.name}"
 			  end
-		    end 
+		    #end 
 		  end
 		end
 	  end
