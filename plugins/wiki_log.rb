@@ -1,7 +1,9 @@
 require 'httparty'
 require 'digest/md5'
 require_relative '../plugin'
- 
+require_relative '../COLORS'
+
+
 class WikiLog
   include Chatbot::Plugin
  
@@ -23,9 +25,14 @@ class WikiLog
  
  
   # S44 Colorize Nicknames
+  #$color_list = {'Idel_sea_Qatarhael' => 'FF0000', 'SethBarrettB.' => 'FF0000', 'Кистрел_Дикин' => 'FF0000'}
   def colorize(qwert)
-    qwert = Digest::MD5.hexdigest(qwert)
-    qwert = qwert[0...6]
+    if $color_list.key?(qwert) then
+      qwert = $color_list[qwert]
+    else
+      qwert = Digest::MD5.hexdigest(qwert)
+      qwert = qwert[0...6]
+    end
     return qwert
   end
  
